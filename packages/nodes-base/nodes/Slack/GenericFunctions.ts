@@ -11,7 +11,7 @@ import type {
 import { NodeOperationError, sleep } from 'n8n-workflow';
 
 import type { SendAndWaitMessageBody } from './MessageInterface';
-import { getSendAndWaitConfig } from '../../../utils/sendAndWait/utils';
+import { getSendAndWaitConfig } from '../../utils/sendAndWait/utils';
 
 interface RateLimitOptions {
 	/**

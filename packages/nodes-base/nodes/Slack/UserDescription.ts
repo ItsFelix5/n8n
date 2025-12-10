@@ -55,7 +55,7 @@ export const userFields: INodeProperties[] = [
 		displayName: 'User',
 		name: 'user',
 		type: 'resourceLocator',
-		default: { mode: 'list', value: '' },
+		default: { mode: 'id', value: '' },
 		placeholder: 'Select a user...',
 		description: 'The ID of the user to get information about',
 		displayOptions: {
@@ -65,16 +65,6 @@ export const userFields: INodeProperties[] = [
 			},
 		},
 		modes: [
-			{
-				displayName: 'From List',
-				name: 'list',
-				type: 'list',
-				placeholder: 'Select a user...',
-				typeOptions: {
-					searchListMethod: 'getUsers',
-					searchable: true,
-				},
-			},
 			{
 				displayName: 'By ID',
 				name: 'id',
@@ -134,7 +124,7 @@ export const userFields: INodeProperties[] = [
 		displayName: 'User',
 		name: 'user',
 		type: 'resourceLocator',
-		default: { mode: 'list', value: '' },
+		default: { mode: 'id', value: '' },
 		placeholder: 'Select a user...',
 		description: 'The ID of the user to get the online status of',
 		displayOptions: {
@@ -144,16 +134,6 @@ export const userFields: INodeProperties[] = [
 			},
 		},
 		modes: [
-			{
-				displayName: 'From List',
-				name: 'list',
-				type: 'list',
-				placeholder: 'Select a user...',
-				typeOptions: {
-					searchListMethod: 'getUsers',
-					searchable: true,
-				},
-			},
 			{
 				displayName: 'By ID',
 				name: 'id',

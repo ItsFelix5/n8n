@@ -14,7 +14,7 @@ import {
 } from 'n8n-workflow';
 
 import { downloadFile, getChannelInfo, getUserInfo, verifySignature } from './SlackTriggerHelpers';
-import { slackApiRequestAllItems } from './V2/GenericFunctions';
+import { slackApiRequestAllItems } from './GenericFunctions';
 
 export class SlackTrigger implements INodeType {
 	description: INodeTypeDescription = {
