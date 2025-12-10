@@ -18,7 +18,7 @@ import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 import MailComposer from 'nodemailer/lib/mail-composer';
 
 import type { IEmail } from '../../../utils/sendAndWait/interfaces';
-import { createUtmCampaignLink, escapeHtml } from '../../../utils/utilities';
+import { escapeHtml } from '../../../utils/utilities';
 import { getGoogleAccessToken } from '../GenericFunctions';
 
 export interface IAttachments {
@@ -425,28 +425,9 @@ export function prepareEmailsInput(
 export function prepareEmailBody(
 	this: IExecuteFunctions | ILoadOptionsFunctions,
 	itemIndex: number,
-	appendAttribution = false,
-	instanceId?: string,
 ) {
 	const emailType = this.getNodeParameter('emailType', itemIndex) as string;
-	let message = (this.getNodeParameter('message', itemIndex, '') as string).trim();
-
-	if (appendAttribution) {
-		const attributionText = 'This email was sent automatically with ';
-		const link = createUtmCampaignLink('n8n-nodes-base.gmail', instanceId);
-		if (emailType === 'html') {
-			message = `
-			${message}
-			<br>
-			<br>
-			---
-			<br>
-			<em>${attributionText}<a href="${link}" target="_blank">n8n</a></em>
-			`;
-		} else {
-			message = `${message}\n\n---\n${attributionText}n8n\n${'https://n8n.io'}`;
-		}
-	}
+	const message = (this.getNodeParameter('message', itemIndex, '') as string).trim();
 
 	const body = {
 		body: '',

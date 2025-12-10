@@ -37,10 +37,6 @@ export const renderFormNode = async (
 			) as string) || 'Submit';
 	}
 
-	const appendAttribution = context.evaluateExpression(
-		`{{ $('${trigger?.name}').params.options?.appendAttribution === false ? false : true }}`,
-	) as boolean;
-
 	renderForm({
 		context,
 		res,
@@ -50,7 +46,6 @@ export const renderFormNode = async (
 		responseMode: 'responseNode',
 		mode,
 		redirectUrl: undefined,
-		appendAttribution,
 		buttonLabel,
 		customCss: options.customCss,
 	});

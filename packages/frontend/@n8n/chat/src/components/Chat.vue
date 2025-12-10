@@ -3,7 +3,6 @@ import Close from 'virtual:icons/mdi/close';
 import { computed, nextTick, onMounted } from 'vue';
 
 import GetStarted from '@n8n/chat/components/GetStarted.vue';
-import GetStartedFooter from '@n8n/chat/components/GetStartedFooter.vue';
 import Input from '@n8n/chat/components/Input.vue';
 import Layout from '@n8n/chat/components/Layout.vue';
 import MessagesList from '@n8n/chat/components/MessagesList.vue';
@@ -72,7 +71,6 @@ onMounted(async () => {
 		<MessagesList v-else :messages="messages" />
 		<template #footer>
 			<Input v-if="currentSessionId" />
-			<GetStartedFooter v-else />
 		</template>
 	</Layout>
 </template>

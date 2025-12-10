@@ -10,7 +10,6 @@ import {
 } from 'n8n-workflow';
 
 import {
-	appendAttributionToForm,
 	formDescription,
 	formFields,
 	formRespondMode,
@@ -135,7 +134,6 @@ const descriptionV2: INodeTypeDescription = {
 			placeholder: 'Add option',
 			default: {},
 			options: [
-				appendAttributionToForm,
 				{
 					displayName: 'Button Label',
 					description: 'The label of the submit button in the form',

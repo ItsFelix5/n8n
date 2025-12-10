@@ -15,7 +15,6 @@ import type {
 	WhatsAppAppWebhookSubscription,
 } from './types';
 import type { SendAndWaitConfig } from '../../utils/sendAndWait/utils';
-import { createUtmCampaignLink } from '../../utils/utilities';
 export const WHATSAPP_BASE_URL = 'https://graph.facebook.com/v13.0/';
 
 async function appAccessTokenRead(
@@ -116,13 +115,6 @@ export const createMessage = (
 		return `*${option.label}:*\n_${option.url}_\n\n`;
 	});
 
-	let n8nAttribution: string = '';
-	if (sendAndWaitConfig.appendAttribution) {
-		const attributionText = 'This message was sent automatically with ';
-		const link = createUtmCampaignLink('n8n-nodes-base.whatsapp', instanceId);
-		n8nAttribution = `\n\n${attributionText}${link}`;
-	}
-
 	return {
 		baseURL: WHATSAPP_BASE_URL,
 		method: 'POST',
@@ -130,7 +122,7 @@ export const createMessage = (
 		body: {
 			messaging_product: 'whatsapp',
 			text: {
-				body: `${sendAndWaitConfig.message}\n\n${buttons.join('')}${n8nAttribution}`,
+				body: `${sendAndWaitConfig.message}\n\n${buttons.join('')}`,
 			},
 			type: 'text',
 			to: recipientPhoneNumber,

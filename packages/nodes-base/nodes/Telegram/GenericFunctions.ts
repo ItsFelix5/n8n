@@ -11,7 +11,6 @@ import type {
 import { NodeApiError } from 'n8n-workflow';
 
 import { getSendAndWaitConfig } from '../../utils/sendAndWait/utils';
-import { createUtmCampaignLink } from '../../utils/utilities';
 
 // Interface in n8n
 export interface IMarkupKeyboard {
@@ -80,13 +79,6 @@ export function addAdditionalFields(
 	const additionalFields = this.getNodeParameter('additionalFields', index);
 
 	if (operation === 'sendMessage') {
-		const attributionText = 'This message was sent automatically with ';
-		const link = createUtmCampaignLink('n8n-nodes-base.telegram', instanceId);
-
-		if (nodeVersion && nodeVersion >= 1.1 && additionalFields.appendAttribution === undefined) {
-			additionalFields.appendAttribution = true;
-		}
-
 		if (!additionalFields.parse_mode) {
 			additionalFields.parse_mode = 'Markdown';
 		}
@@ -98,14 +90,6 @@ export function addAdditionalFields(
 			body.disable_web_page_preview = true;
 		}
 
-		if (additionalFields.appendAttribution) {
-			if (additionalFields.parse_mode === 'Markdown') {
-				body.text = `${body.text}\n\n_${attributionText}_[n8n](${link})`;
-			} else if (additionalFields.parse_mode === 'HTML') {
-				body.text = `${body.text}\n\n<em>${attributionText}</em><a href="${link}" target="_blank">n8n</a>`;
-			}
-		}
-
 		if (
 			nodeVersion &&
 			nodeVersion >= 1.2 &&
@@ -113,8 +97,6 @@ export function addAdditionalFields(
 		) {
 			body.disable_web_page_preview = true;
 		}
-
-		delete additionalFields.appendAttribution;
 	}
 
 	Object.assign(body, additionalFields);
@@ -258,18 +240,9 @@ export function createSendAndWaitMessageBody(context: IExecuteFunctions) {
 	const chat_id = context.getNodeParameter('chatId', 0) as string;
 
 	const config = getSendAndWaitConfig(context);
-	let text = config.message;
-
-	if (config.appendAttribution !== false) {
-		const instanceId = context.getInstanceId();
-		const attributionText = 'This message was sent automatically with ';
-		const link = createUtmCampaignLink('n8n-nodes-base.telegram', instanceId);
-		text = `${text}\n\n_${attributionText}_[n8n](${link})`;
-	}
-
 	const body = {
 		chat_id,
-		text,
+		text: config.message,
 
 		disable_web_page_preview: true,
 		parse_mode: 'Markdown',

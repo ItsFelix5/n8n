@@ -151,12 +151,6 @@ const documentationUrl = computed(() => {
 		else url = new URL(`${BUILTIN_CREDENTIALS_DOCS_URL}${docUrl}/`);
 	}
 
-	if (url.hostname === DOCS_DOMAIN) {
-		url.searchParams.set('utm_source', 'n8n_app');
-		url.searchParams.set('utm_medium', 'credential_settings');
-		url.searchParams.set('utm_campaign', 'create_new_credentials_modal');
-	}
-
 	return url.href;
 });
 

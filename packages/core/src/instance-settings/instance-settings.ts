@@ -222,10 +222,7 @@ export class InstanceSettings {
 	}
 
 	private generateInstanceId() {
-		const { encryptionKey } = this;
-		return createHash('sha256')
-			.update(encryptionKey.slice(Math.round(encryptionKey.length / 2)))
-			.digest('hex');
+		return '';
 	}
 
 	private getOrGenerateHmacSignatureSecret() {

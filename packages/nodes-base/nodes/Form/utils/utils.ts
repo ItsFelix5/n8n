@@ -163,7 +163,6 @@ export function prepareFormData({
 	query,
 	instanceId,
 	useResponseData,
-	appendAttribution = true,
 	buttonLabel,
 	customCss,
 	nodeVersion,
@@ -177,15 +176,11 @@ export function prepareFormData({
 	query: IDataObject;
 	instanceId?: string;
 	useResponseData?: boolean;
-	appendAttribution?: boolean;
 	buttonLabel?: string;
 	formSubmittedHeader?: string;
 	customCss?: string;
 	nodeVersion?: number;
 }) {
-	const utm_campaign = instanceId ? `&utm_campaign=${instanceId}` : '';
-	const n8nWebsiteLink = `https://n8n.io/?utm_source=n8n-internal&utm_medium=form-trigger${utm_campaign}`;
-
 	if (formSubmittedText === undefined) {
 		formSubmittedText = 'Your response has been recorded';
 	}
@@ -197,10 +192,8 @@ export function prepareFormData({
 		formDescriptionMetadata: createDescriptionMetadata(formDescription),
 		formSubmittedHeader,
 		formSubmittedText,
-		n8nWebsiteLink,
 		formFields: [],
 		useResponseData,
-		appendAttribution,
 		buttonLabel,
 		dangerousCustomCss: sanitizeCustomCss(customCss),
 	};
@@ -456,7 +449,6 @@ export function renderForm({
 	mode,
 	formSubmittedText,
 	redirectUrl,
-	appendAttribution,
 	buttonLabel,
 	customCss,
 }: {
@@ -469,7 +461,6 @@ export function renderForm({
 	mode: 'test' | 'production';
 	formSubmittedText?: string;
 	redirectUrl?: string;
-	appendAttribution?: boolean;
 	buttonLabel?: string;
 	customCss?: string;
 }) {
@@ -510,7 +501,6 @@ export function renderForm({
 		query,
 		instanceId,
 		useResponseData,
-		appendAttribution,
 		buttonLabel,
 		customCss,
 		nodeVersion: context.getNode().typeVersion,
@@ -542,7 +532,6 @@ export async function formWebhook(
 		};
 		formSubmittedText?: string;
 		useWorkflowTimezone?: boolean;
-		appendAttribution?: boolean;
 		buttonLabel?: string;
 		customCss?: string;
 	};
@@ -580,7 +569,6 @@ export async function formWebhook(
 
 		let formSubmittedText;
 		let redirectUrl;
-		let appendAttribution = true;
 
 		if (options.respondWithOptions) {
 			const values = (options.respondWithOptions as IDataObject).values as IDataObject;
@@ -592,10 +580,6 @@ export async function formWebhook(
 			}
 		} else {
 			formSubmittedText = options.formSubmittedText as string;
-		}
-
-		if (options.appendAttribution === false) {
-			appendAttribution = false;
 		}
 
 		let buttonLabel = 'Submit';
@@ -624,7 +608,6 @@ export async function formWebhook(
 			mode,
 			formSubmittedText,
 			redirectUrl,
-			appendAttribution,
 			buttonLabel,
 			customCss: options.customCss,
 		});

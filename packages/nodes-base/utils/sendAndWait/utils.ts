@@ -18,7 +18,6 @@ import {
 	ACTION_RECORDED_PAGE,
 	BUTTON_STYLE_PRIMARY,
 	BUTTON_STYLE_SECONDARY,
-	createEmailBodyWithN8nAttribution,
 	createEmailBodyWithoutN8nAttribution,
 } from './email-templates';
 import type { IEmail } from './interfaces';
@@ -35,7 +34,6 @@ export type SendAndWaitConfig = {
 	title: string;
 	message: string;
 	options: Array<{ label: string; url: string; style: string }>;
-	appendAttribution?: boolean;
 };
 
 type FormResponseTypeOptions = {
@@ -62,15 +60,6 @@ const limitWaitTimeOption: INodeProperties = {
 			values: limitWaitTimeProperties,
 		},
 	],
-};
-
-const appendAttributionOption: INodeProperties = {
-	displayName: 'Append n8n Attribution',
-	name: 'appendAttribution',
-	type: 'boolean',
-	default: true,
-	description:
-		'Whether to include the phrase "This message was sent automatically with n8n" to the end of the message',
 };
 
 // Operation Properties ----------------------------------------------------------
@@ -248,7 +237,7 @@ export function getSendAndWaitProperties(
 			type: 'collection',
 			placeholder: 'Add option',
 			default: {},
-			options: [limitWaitTimeOption, appendAttributionOption],
+			options: [limitWaitTimeOption],
 			displayOptions: {
 				show: {
 					responseType: ['approval'],
@@ -300,7 +289,6 @@ export function getSendAndWaitProperties(
 					description: 'Override default styling of the response form with CSS',
 				},
 				limitWaitTimeOption,
-				appendAttributionOption,
 			],
 			displayOptions: {
 				show: {
@@ -493,7 +481,6 @@ export function getSendAndWaitConfig(context: IExecuteFunctions): SendAndWaitCon
 		title: subject,
 		message,
 		options: [],
-		appendAttribution: options?.appendAttribution as boolean,
 	};
 
 	const responseType = context.getNodeParameter('responseType', 0, 'approval') as string;
@@ -562,19 +549,12 @@ export function createEmail(context: IExecuteFunctions) {
 	for (const option of config.options) {
 		buttons.push(createButton(option.url, option.label, option.style));
 	}
-	let emailBody: string;
-	if (config.appendAttribution !== false) {
-		const instanceId = context.getInstanceId();
-		emailBody = createEmailBodyWithN8nAttribution(config.message, buttons.join('\n'), instanceId);
-	} else {
-		emailBody = createEmailBodyWithoutN8nAttribution(config.message, buttons.join('\n'));
-	}
 
 	const email: IEmail = {
 		to,
 		subject: config.title,
 		body: '',
-		htmlBody: emailBody,
+		htmlBody: createEmailBodyWithoutN8nAttribution(config.message, buttons.join('\n')),
 	};
 
 	return email;
