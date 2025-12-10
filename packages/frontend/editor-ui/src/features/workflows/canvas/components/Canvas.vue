@@ -522,6 +522,7 @@ function onConnectStart(handle: ConnectStartEvent) {
 }
 
 function onConnect(connection: Connection) {
+	if (connection.source === connection.target) alert("Yes you can, no you shouldn't");
 	emit('create:connection', connection);
 
 	connectedHandle.value = connection;
