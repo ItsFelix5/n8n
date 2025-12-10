@@ -42,10 +42,8 @@ export type FormTriggerData = {
 	formSubmittedHeader?: string;
 	formSubmittedText?: string;
 	redirectUrl?: string;
-	n8nWebsiteLink: string;
 	formFields: FormField[];
 	useResponseData?: boolean;
-	appendAttribution?: boolean;
 	buttonLabel?: string;
 	dangerousCustomCss?: string;
 };

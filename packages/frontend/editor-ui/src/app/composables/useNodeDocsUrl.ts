@@ -25,16 +25,10 @@ export const useNodeDocsUrl = ({
 			return nodeType.documentationUrl;
 		}
 
-		const utmParams = new URLSearchParams({
-			utm_source: 'n8n_app',
-			utm_medium: 'node_settings_modal-credential_link',
-			utm_campaign: nodeType.name,
-		});
-
 		// Built-in node documentation available via its codex entry
 		const primaryDocUrl = nodeType.codex?.resources?.primaryDocumentation?.[0]?.url;
 		if (primaryDocUrl) {
-			return `${primaryDocUrl}?${utmParams.toString()}`;
+			return primaryDocUrl;
 		}
 
 		if (isCommunityNode.value) {
@@ -42,7 +36,7 @@ export const useNodeDocsUrl = ({
 		}
 
 		// Fallback to the root of the node documentation
-		return `${BUILTIN_NODES_DOCS_URL}?${utmParams.toString()}`;
+		return BUILTIN_NODES_DOCS_URL;
 	});
 
 	return { docsUrl };

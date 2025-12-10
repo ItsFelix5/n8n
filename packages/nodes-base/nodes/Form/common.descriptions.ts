@@ -1,7 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
 
-import { appendAttributionOption } from '../../utils/descriptions';
-
 export const placeholder: string = `
 <!-- Your custom HTML here --->
 
@@ -643,9 +641,4 @@ export const respondWithOptions: INodeProperties = {
 			],
 		},
 	],
-};
-
-export const appendAttributionToForm: INodeProperties = {
-	...appendAttributionOption,
-	description: 'Whether to include the link “Form automated with n8n” at the bottom of the form',
 };

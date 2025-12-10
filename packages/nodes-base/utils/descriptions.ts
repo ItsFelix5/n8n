@@ -42,13 +42,6 @@ export const looseTypeValidationProperty: INodeProperties = {
 	default: true,
 };
 
-export const appendAttributionOption: INodeProperties = {
-	displayName: 'Append n8n Attribution',
-	name: 'appendAttribution',
-	type: 'boolean',
-	default: true,
-};
-
 export const encodeDecodeOptions: INodePropertyOptions[] = [
 	{
 		name: 'armscii8',

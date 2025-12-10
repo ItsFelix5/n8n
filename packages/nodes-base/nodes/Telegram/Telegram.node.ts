@@ -22,7 +22,6 @@ import {
 	createSendAndWaitMessageBody,
 	getPropertyName,
 } from './GenericFunctions';
-import { appendAttributionOption } from '../../utils/descriptions';
 import { configureWaitTillDate } from '../../utils/sendAndWait/configureWaitTillDate.util';
 import { sendAndWaitWebhooksDescription } from '../../utils/sendAndWait/descriptions';
 import {
@@ -1577,16 +1576,6 @@ export class Telegram implements INodeType {
 				},
 				default: {},
 				options: [
-					{
-						...appendAttributionOption,
-						description:
-							'Whether to include the phrase “This message was sent automatically with n8n” to the end of the message',
-						displayOptions: {
-							show: {
-								'/operation': ['sendMessage'],
-							},
-						},
-					},
 					{
 						displayName: 'Caption',
 						name: 'caption',

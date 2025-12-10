@@ -67,9 +67,6 @@ export const renderFormCompletion = async (
 	if (!title) {
 		title = context.evaluateExpression(`{{ $('${trigger?.name}').params.formTitle }}`) as string;
 	}
-	const appendAttribution = context.evaluateExpression(
-		`{{ $('${trigger?.name}').params.options?.appendAttribution === false ? false : true }}`,
-	) as boolean;
 
 	if (respondWith !== 'redirect') {
 		res.setHeader('Content-Security-Policy', SANDBOX_CSP);
@@ -79,7 +76,6 @@ export const renderFormCompletion = async (
 		title: completionTitle,
 		message: sanitizeHtml(completionMessage),
 		formTitle: title,
-		appendAttribution,
 		responseText,
 		responseBinary: encodeURIComponent(JSON.stringify(binary)),
 		dangerousCustomCss: sanitizeCustomCss(options.customCss),

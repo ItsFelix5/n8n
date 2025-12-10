@@ -325,11 +325,6 @@ export class GmailV2 implements INodeType {
 							from = `${options.senderName as string} <${emailAddress}>`;
 						}
 
-						let appendAttribution = options.appendAttribution;
-						if (appendAttribution === undefined) {
-							appendAttribution = nodeVersion >= 2.1;
-						}
-
 						const email: IEmail = {
 							from,
 							to,
@@ -337,7 +332,7 @@ export class GmailV2 implements INodeType {
 							bcc,
 							replyTo,
 							subject: this.getNodeParameter('subject', i) as string,
-							...prepareEmailBody.call(this, i, appendAttribution as boolean, instanceId),
+							...prepareEmailBody.call(this, i),
 							attachments,
 						};
 

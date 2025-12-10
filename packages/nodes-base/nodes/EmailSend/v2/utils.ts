@@ -8,7 +8,6 @@ import { createTransport } from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 export type EmailSendOptions = {
-	appendAttribution?: boolean;
 	allowUnauthorizedCerts?: boolean;
 	attachments?: string;
 	ccEmail?: string;

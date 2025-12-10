@@ -11,7 +11,7 @@ import type {
 import { jsonParse, NodeApiError, NodeOperationError } from 'n8n-workflow';
 
 import { getSendAndWaitConfig } from '../../../../utils/sendAndWait/utils';
-import { capitalize, createUtmCampaignLink } from '../../../../utils/utilities';
+import { capitalize } from '../../../../utils/utilities';
 import { discordApiMultiPartRequest, discordApiRequest } from '../transport';
 
 export const createSimplifyFunction =
@@ -394,18 +394,11 @@ export async function sendDiscordMessage(
 
 export function createSendAndWaitMessageBody(context: IExecuteFunctions) {
 	const config = getSendAndWaitConfig(context);
-	let description = config.message;
-	if (config.appendAttribution !== false) {
-		const instanceId = context.getInstanceId();
-		const attributionText = 'This message was sent automatically with ';
-		const link = createUtmCampaignLink('n8n-nodes-base.discord', instanceId);
-		description = `${config.message}\n\n_${attributionText}_[n8n](${link})`;
-	}
 
 	const body = {
 		embeds: [
 			{
-				description,
+				description: config.message,
 				color: 5814783,
 			},
 		],

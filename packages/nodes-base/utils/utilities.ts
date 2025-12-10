@@ -475,12 +475,6 @@ export function sortItemKeysByPriorityList(data: INodeExecutionData[], priorityL
 	});
 }
 
-export function createUtmCampaignLink(nodeType: string, instanceId?: string) {
-	return `https://n8n.io/?utm_source=n8n-internal&utm_medium=powered_by&utm_campaign=${encodeURIComponent(
-		nodeType,
-	)}${instanceId ? '_' + instanceId : ''}`;
-}
-
 export const removeTrailingSlash = (url: string) => {
 	if (url.endsWith('/')) {
 		return url.slice(0, -1);

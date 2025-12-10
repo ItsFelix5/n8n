@@ -7,11 +7,10 @@ import type {
 } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
 
-import { createUtmCampaignLink, updateDisplayOptions } from '@utils/utilities';
+import { updateDisplayOptions } from '@utils/utilities';
 
 import { fromEmailProperty, toEmailProperty } from './descriptions';
 import { configureTransport, type EmailSendOptions } from './utils';
-import { appendAttributionOption } from '../../../utils/descriptions';
 
 const properties: INodeProperties[] = [
 	// TODO: Add choice for text as text or html  (maybe also from name)
@@ -117,11 +116,6 @@ const properties: INodeProperties[] = [
 		default: {},
 		options: [
 			{
-				...appendAttributionOption,
-				description:
-					'Whether to include the phrase “This email was sent automatically with n8n” to the end of the email',
-			},
-			{
 				displayName: 'Attachments',
 				name: 'attachments',
 				type: 'string',
@@ -175,8 +169,6 @@ export const description = updateDisplayOptions(displayOptions, properties);
 
 export async function execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 	const items = this.getInputData();
-	const nodeVersion = this.getNode().typeVersion;
-	const instanceId = this.getInstanceId();
 	const credentials = await this.getCredentials('smtp');
 
 	const returnData: INodeExecutionData[] = [];
@@ -209,28 +201,6 @@ export async function execute(this: IExecuteFunctions): Promise<INodeExecutionDa
 
 			if (emailFormat === 'html' || emailFormat === 'both') {
 				mailOptions.html = this.getNodeParameter('html', itemIndex, '');
-			}
-
-			let appendAttribution = options.appendAttribution;
-			if (appendAttribution === undefined) {
-				appendAttribution = nodeVersion >= 2.1;
-			}
-
-			if (appendAttribution) {
-				const attributionText = 'This email was sent automatically with ';
-				const link = createUtmCampaignLink('n8n-nodes-base.emailSend', instanceId);
-				if (emailFormat === 'html' || (emailFormat === 'both' && mailOptions.html)) {
-					mailOptions.html = `
-					${mailOptions.html}
-					<br>
-					<br>
-					---
-					<br>
-					<em>${attributionText}<a href="${link}" target="_blank">n8n</a></em>
-					`;
-				} else {
-					mailOptions.text = `${mailOptions.text}\n\n---\n${attributionText}n8n\n${'https://n8n.io'}`;
-				}
 			}
 
 			if (options.attachments && item.binary) {
