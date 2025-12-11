@@ -109,7 +109,6 @@ export const createMessage = (
 	sendAndWaitConfig: SendAndWaitConfig,
 	phoneNumberId: string,
 	recipientPhoneNumber: string,
-	instanceId: string,
 ): IHttpRequestOptions => {
 	const buttons = sendAndWaitConfig.options.map((option) => {
 		return `*${option.label}:*\n_${option.url}_\n\n`;

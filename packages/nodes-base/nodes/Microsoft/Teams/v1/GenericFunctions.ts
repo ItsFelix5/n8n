@@ -94,7 +94,6 @@ export function prepareMessage(
 	message: string,
 	messageType: string,
 	includeLinkToWorkflow: boolean,
-	instanceId?: string,
 ) {
 	if (includeLinkToWorkflow) {
 		const { id } = this.getWorkflow();

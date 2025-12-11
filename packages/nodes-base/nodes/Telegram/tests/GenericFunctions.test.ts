@@ -135,7 +135,6 @@ describe('Telegram > GenericFunctions', () => {
 			const body: IDataObject = { text: 'Hello, world!' };
 			const index = 0;
 			const nodeVersion = 1.1;
-			const instanceId = '45';
 
 			(mockThis.getNodeParameter as jest.Mock).mockImplementation((paramName: string) => {
 				switch (paramName) {
@@ -150,7 +149,7 @@ describe('Telegram > GenericFunctions', () => {
 				}
 			});
 
-			addAdditionalFields.call(mockThis, body, index, nodeVersion, instanceId);
+			addAdditionalFields.call(mockThis, body, index, nodeVersion);
 
 			expect(body).toEqual({
 				text: 'Hello, world!\n\n_This message was sent automatically with _[n8n](https://n8n.io/?utm_source=n8n-internal&utm_medium=powered_by&utm_campaign=n8n-nodes-base.telegram_45)',

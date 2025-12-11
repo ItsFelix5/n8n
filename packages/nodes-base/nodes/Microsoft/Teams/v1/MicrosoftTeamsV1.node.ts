@@ -280,7 +280,6 @@ export class MicrosoftTeamsV1 implements INodeType {
 		const resource = this.getNodeParameter('resource', 0);
 		const operation = this.getNodeParameter('operation', 0);
 		const nodeVersion = this.getNode().typeVersion;
-		const instanceId = this.getInstanceId();
 
 		for (let i = 0; i < length; i++) {
 			try {
@@ -391,7 +390,6 @@ export class MicrosoftTeamsV1 implements INodeType {
 							message,
 							messageType,
 							includeLinkToWorkflow as boolean,
-							instanceId,
 						);
 
 						if (options.makeReply) {
@@ -452,7 +450,6 @@ export class MicrosoftTeamsV1 implements INodeType {
 							message,
 							messageType,
 							includeLinkToWorkflow,
-							instanceId,
 						);
 
 						responseData = await microsoftApiRequest.call(

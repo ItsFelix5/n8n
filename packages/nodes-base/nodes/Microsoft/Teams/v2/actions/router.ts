@@ -22,7 +22,6 @@ export async function router(this: IExecuteFunctions): Promise<INodeExecutionDat
 	const operation = this.getNodeParameter('operation', 0);
 
 	const nodeVersion = this.getNode().typeVersion;
-	const instanceId = this.getInstanceId();
 
 	const microsoftTeamsTypeData = {
 		resource,
@@ -33,7 +32,7 @@ export async function router(this: IExecuteFunctions): Promise<INodeExecutionDat
 		microsoftTeamsTypeData.resource === 'chatMessage' &&
 		microsoftTeamsTypeData.operation === SEND_AND_WAIT_OPERATION
 	) {
-		await chatMessage[microsoftTeamsTypeData.operation].execute.call(this, 0, instanceId);
+		await chatMessage[microsoftTeamsTypeData.operation].execute.call(this, 0);
 
 		const waitTill = configureWaitTillDate(this);
 
@@ -52,15 +51,10 @@ export async function router(this: IExecuteFunctions): Promise<INodeExecutionDat
 						this,
 						i,
 						nodeVersion,
-						instanceId,
 					);
 					break;
 				case 'chatMessage':
-					responseData = await chatMessage[microsoftTeamsTypeData.operation].execute.call(
-						this,
-						i,
-						instanceId,
-					);
+					responseData = await chatMessage[microsoftTeamsTypeData.operation].execute.call(this, i);
 					break;
 				case 'task':
 					responseData = await task[microsoftTeamsTypeData.operation].execute.call(this, i);

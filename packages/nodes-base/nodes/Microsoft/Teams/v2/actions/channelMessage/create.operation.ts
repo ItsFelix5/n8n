@@ -75,12 +75,7 @@ const displayOptions = {
 
 export const description = updateDisplayOptions(displayOptions, properties);
 
-export async function execute(
-	this: IExecuteFunctions,
-	i: number,
-	nodeVersion: number,
-	instanceId: string,
-) {
+export async function execute(this: IExecuteFunctions, i: number, nodeVersion: number) {
 	//https://docs.microsoft.com/en-us/graph/api/channel-post-messages?view=graph-rest-beta&tabs=http
 	//https://docs.microsoft.com/en-us/graph/api/channel-post-messagereply?view=graph-rest-beta&tabs=http
 
@@ -100,7 +95,6 @@ export async function execute(
 		message,
 		contentType,
 		includeLinkToWorkflow as boolean,
-		instanceId,
 	);
 
 	if (options.makeReply) {

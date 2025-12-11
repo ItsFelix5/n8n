@@ -161,7 +161,6 @@ export function prepareFormData({
 	formFields,
 	testRun,
 	query,
-	instanceId,
 	useResponseData,
 	buttonLabel,
 	customCss,
@@ -174,7 +173,6 @@ export function prepareFormData({
 	formFields: FormFieldsParameter;
 	testRun: boolean;
 	query: IDataObject;
-	instanceId?: string;
 	useResponseData?: boolean;
 	buttonLabel?: string;
 	formSubmittedHeader?: string;
@@ -465,8 +463,6 @@ export function renderForm({
 	customCss?: string;
 }) {
 	formDescription = (formDescription || '').replace(/\\n/g, '\n').replace(/<br>/g, '\n');
-	const instanceId = context.getInstanceId();
-
 	const useResponseData = responseMode === 'responseNode';
 
 	let query: IDataObject = {};
@@ -499,7 +495,6 @@ export function renderForm({
 		formFields,
 		testRun: mode === 'test',
 		query,
-		instanceId,
 		useResponseData,
 		buttonLabel,
 		customCss,

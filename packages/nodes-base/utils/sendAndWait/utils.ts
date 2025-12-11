@@ -475,8 +475,6 @@ export function getSendAndWaitConfig(context: IExecuteFunctions): SendAndWaitCon
 		buttonDisapprovalStyle?: string;
 	};
 
-	const options = context.getNodeParameter('options', 0, {});
-
 	const config: SendAndWaitConfig = {
 		title: subject,
 		message,

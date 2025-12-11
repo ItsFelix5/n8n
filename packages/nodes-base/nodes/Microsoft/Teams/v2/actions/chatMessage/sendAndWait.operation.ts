@@ -18,7 +18,7 @@ export const description: INodeProperties[] = getSendAndWaitProperties(
 	},
 ).filter((p) => p.name !== 'subject');
 
-export async function execute(this: IExecuteFunctions, i: number, instanceId: string) {
+export async function execute(this: IExecuteFunctions, i: number) {
 	const chatId = this.getNodeParameter('chatId', i, '', { extractValue: true }) as string;
 	const config = getSendAndWaitConfig(this);
 

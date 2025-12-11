@@ -66,7 +66,7 @@ const displayOptions = {
 
 export const description = updateDisplayOptions(displayOptions, properties);
 
-export async function execute(this: IExecuteFunctions, i: number, instanceId: string) {
+export async function execute(this: IExecuteFunctions, i: number) {
 	// https://docs.microsoft.com/en-us/graph/api/channel-post-messages?view=graph-rest-1.0&tabs=http
 
 	const chatId = this.getNodeParameter('chatId', i, '', { extractValue: true }) as string;
@@ -76,13 +76,7 @@ export async function execute(this: IExecuteFunctions, i: number, instanceId: st
 
 	const includeLinkToWorkflow = options.includeLinkToWorkflow !== false;
 
-	const body: IDataObject = prepareMessage.call(
-		this,
-		message,
-		contentType,
-		includeLinkToWorkflow,
-		instanceId,
-	);
+	const body: IDataObject = prepareMessage.call(this, message, contentType, includeLinkToWorkflow);
 
 	return await microsoftApiRequest.call(this, 'POST', `/v1.0/chats/${chatId}/messages`, body);
 }

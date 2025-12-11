@@ -1835,7 +1835,6 @@ export class Telegram implements INodeType {
 		const binaryData = this.getNodeParameter('binaryData', 0, false);
 
 		const nodeVersion = this.getNode().typeVersion;
-		const instanceId = this.getInstanceId();
 
 		if (resource === 'message' && operation === SEND_AND_WAIT_OPERATION) {
 			body = createSendAndWaitMessageBody(this);
@@ -2072,7 +2071,7 @@ export class Telegram implements INodeType {
 						body.text = this.getNodeParameter('text', i) as string;
 
 						// Add additional fields and replyMarkup
-						addAdditionalFields.call(this, body, i, nodeVersion, instanceId);
+						addAdditionalFields.call(this, body, i, nodeVersion);
 					} else if (operation === 'sendMediaGroup') {
 						// ----------------------------------
 						//         message:sendMediaGroup

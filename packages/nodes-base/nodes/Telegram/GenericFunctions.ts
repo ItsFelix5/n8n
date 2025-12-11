@@ -71,7 +71,6 @@ export function addAdditionalFields(
 	body: IDataObject,
 	index: number,
 	nodeVersion?: number,
-	instanceId?: string,
 ) {
 	const operation = this.getNodeParameter('operation', index);
 

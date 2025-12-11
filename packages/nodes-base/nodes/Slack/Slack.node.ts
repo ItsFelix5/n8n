@@ -314,7 +314,6 @@ export class Slack implements INodeType {
 		const operation = this.getNodeParameter('operation', 0);
 
 		const nodeVersion = this.getNode().typeVersion;
-		const instanceId = this.getInstanceId();
 
 		if (resource === 'message' && operation === SEND_AND_WAIT_OPERATION) {
 			await slackApiRequest.call(
@@ -768,7 +767,7 @@ export class Slack implements INodeType {
 						const select = this.getNodeParameter('select', i) as 'user' | 'channel';
 						const target = getTarget(this, i, select);
 						const { sendAsUser } = this.getNodeParameter('otherOptions', i) as IDataObject;
-						const content = getMessageContent.call(this, i, nodeVersion, instanceId);
+						const content = getMessageContent.call(this, i, nodeVersion);
 
 						const body: IDataObject = {
 							channel: target,
@@ -836,7 +835,7 @@ export class Slack implements INodeType {
 							{ extractValue: true },
 						) as string;
 						const ts = this.getNodeParameter('ts', i)?.toString() as string;
-						const content = getMessageContent.call(this, i, nodeVersion, instanceId);
+						const content = getMessageContent.call(this, i, nodeVersion);
 
 						const body: IDataObject = {
 							channel,

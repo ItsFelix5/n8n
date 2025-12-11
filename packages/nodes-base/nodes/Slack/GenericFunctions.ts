@@ -276,7 +276,6 @@ export function getMessageContent(
 	this: IExecuteFunctions | ILoadOptionsFunctions,
 	i: number,
 	nodeVersion: number,
-	instanceId?: string,
 ) {
 	const includeLinkToWorkflow = this.getNodeParameter(
 		'otherOptions.includeLinkToWorkflow',
