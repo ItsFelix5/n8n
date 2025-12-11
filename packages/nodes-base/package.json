@@ -760,6 +760,7 @@
       "dist/nodes/Simulate/SimulateTrigger.node.js",
       "dist/nodes/Slack/Slack.node.js",
       "dist/nodes/Slack/SlackTrigger.node.js",
+      "dist/nodes/Slack/SlackTriggerPlus.node.js",
       "dist/nodes/Sms77/Sms77.node.js",
       "dist/nodes/Snowflake/Snowflake.node.js",
       "dist/nodes/SplitInBatches/SplitInBatches.node.js",

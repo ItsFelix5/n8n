@@ -6,6 +6,7 @@ import { AuthProviderSyncHistory } from './auth-provider-sync-history';
 import { BinaryDataFile, SourceTypeSchema, type SourceType } from './binary-data-file';
 import { CredentialsEntity } from './credentials-entity';
 import { EventDestinations } from './event-destinations';
+import { EventEntity } from './event-entity';
 import { ExecutionAnnotation } from './execution-annotation.ee';
 import { ExecutionData } from './execution-data';
 import { ExecutionEntity } from './execution-entity';
@@ -45,6 +46,7 @@ export {
 	SourceTypeSchema,
 	type SourceType,
 	WebhookEntity,
+	EventEntity,
 	AuthIdentity,
 	CredentialsEntity,
 	Folder,
@@ -83,6 +85,7 @@ export const entities = {
 	ApiKey,
 	BinaryDataFile,
 	WebhookEntity,
+	EventEntity,
 	AuthIdentity,
 	CredentialsEntity,
 	Folder,

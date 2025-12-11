@@ -84,6 +84,8 @@ export const useRootStore = defineStore(STORES.ROOT, () => {
 		() => `${state.value.urlBaseEditor}${state.value.endpointWebhookWaiting}`,
 	);
 
+	const eventUrl = computed(() => `${state.value.urlBaseWebhook}event/`);
+
 	const mcpUrl = computed(() => `${state.value.urlBaseWebhook}${state.value.endpointMcp}`);
 
 	const mcpTestUrl = computed(() => `${state.value.urlBaseEditor}${state.value.endpointMcpTest}`);
@@ -212,6 +214,7 @@ export const useRootStore = defineStore(STORES.ROOT, () => {
 		webhookUrl,
 		webhookTestUrl,
 		webhookWaitingUrl,
+		eventUrl,
 		restUrl,
 		restApiContext,
 		urlBaseEditor,

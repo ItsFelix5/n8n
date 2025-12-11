@@ -9,6 +9,8 @@ import { readFile } from 'fs/promises';
 import type { Server } from 'http';
 import isbot from 'isbot';
 
+import { EventHandler } from './webhooks/event-handler';
+
 import config from '@/config';
 import { N8N_VERSION, TEMPLATES_DIR } from '@/constants';
 import { ServiceUnavailableError } from '@/errors/response-errors/service-unavailable.error';
@@ -248,6 +250,10 @@ export abstract class AbstractServer {
 			// Register a handler for test MCP servers
 			this.app.all(`/${this.endpointMcpTest}/*path`, testWebhooksRequestHandler);
 		}
+
+		const eventHandler = Container.get(EventHandler);
+		// eslint-disable-next-line
+		this.app.post('/event/*path', eventHandler.execute.bind(eventHandler));
 
 		// Block bots from scanning the application
 		const checkIfBot = isbot.spawn(['bot']);

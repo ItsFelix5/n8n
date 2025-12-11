@@ -162,13 +162,7 @@ export function send<T, R extends Request, S extends Response>(
 
 			if (!res.headersSent) sendSuccessResponse(res, data, raw);
 		} catch (error) {
-			if (error instanceof Error) {
-				reportError(error);
-
-				if (isUniqueConstraintError(error)) {
-					error.message = 'There is already an entry with this name';
-				}
-			}
+			if (error instanceof Error) reportError(error);
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			sendErrorResponse(res, error);
