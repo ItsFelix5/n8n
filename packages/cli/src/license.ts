@@ -166,9 +166,11 @@ export class License implements LicenseProvider {
 	}
 
 	getValue<T extends keyof FeatureReturnType>(feature: T): FeatureReturnType[T] {
-		const val = Object.entries(process.env).find(([key, value]) => {
-			if (key.startsWith('N8N_LICENSE_'))
-				feature.toLowerCase().startsWith(key.substring(12).toLowerCase());
+		const val = Object.entries(process.env).find(([key]) => {
+			return (
+				key.startsWith('N8N_LICENSE_') &&
+				feature.toLowerCase().replaceAll(':', '_').startsWith(key.substring(12).toLowerCase())
+			);
 		})?.[1];
 		if (!val) return undefined;
 		if ((Object.values(LICENSE_FEATURES) as string[]).includes(feature))
@@ -185,7 +187,7 @@ export class License implements LicenseProvider {
 	/**
 	 * Helper function to get the latest main plan for a license
 	 */
-	getMainPlan(): Array<{ productId: string }> | undefined {
+	getMainPlan(): { productId: string } | undefined {
 		return undefined;
 	}
 
