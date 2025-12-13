@@ -21,17 +21,18 @@ get:
       description: Operation successful.
       content:
         application/json:
-          type: object
-          additionalProperties: true
-          properties:
-            webhookPath:
-              type: string
-            method:
-              type: string
-            workflowId:
-              type: string
-            node:
-              type: string
+          schema:
+            type: object
+            additionalProperties: true
+            properties:
+              webhookPath:
+                type: string
+              method:
+                type: string
+              workflowId:
+                type: string
+              node:
+                type: string
     '401':
       $ref: '../../../../shared/spec/responses/unauthorized.yml'
     '404':
