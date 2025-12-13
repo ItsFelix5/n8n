@@ -7,8 +7,8 @@ import {
 } from '@/constants';
 import { Logger } from '@n8n/backend-common';
 import { WorkflowsConfig } from '@n8n/config';
-import type { WorkflowEntity, IWorkflowDb, EventRepository } from '@n8n/db';
-import { WorkflowRepository } from '@n8n/db';
+import type { WorkflowEntity, IWorkflowDb } from '@n8n/db';
+import { WorkflowRepository, EventRepository } from '@n8n/db';
 import { OnLeaderStepdown, OnLeaderTakeover, OnPubSubEvent, OnShutdown } from '@n8n/decorators';
 import { Service } from '@n8n/di';
 import chunk from 'lodash/chunk';
