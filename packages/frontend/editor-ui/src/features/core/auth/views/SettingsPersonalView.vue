@@ -184,13 +184,8 @@ onMounted(() => {
 			name: 'email',
 			initialValue: currentUser.value?.email,
 			properties: {
-				label: i18n.baseText('auth.email'),
-				type: 'email',
-				required: true,
-				validationRules: [{ name: 'VALID_EMAIL' }],
-				autocomplete: 'email',
-				capitalize: true,
-				disabled: !isPersonalSecurityEnabled.value,
+				label: 'Slack ID',
+				disabled: true,
 			},
 		},
 	];

@@ -4,7 +4,6 @@ import { GlobalConfig } from '@n8n/config';
 import {
 	AuthIdentity,
 	AuthIdentityRepository,
-	isValidEmail,
 	GLOBAL_MEMBER_ROLE,
 	SettingsRepository,
 	type User,
@@ -188,8 +187,8 @@ export class OidcService {
 
 		// Include the custom n8n scope if provisioning is enabled
 		const scope = provisioningEnabled
-			? `openid email profile ${provisioningConfig.scopesName}`
-			: 'openid email profile';
+			? `openid+email+profile ${provisioningConfig.scopesName}`
+			: 'openid+email+profile';
 
 		const authorizationURL = client.buildAuthorizationUrl(configuration, {
 			redirect_uri: this.getCallbackUrl(),
@@ -243,14 +242,6 @@ export class OidcService {
 			throw new BadRequestError('Invalid token');
 		}
 
-		if (!userInfo.email) {
-			throw new BadRequestError('An email is required');
-		}
-
-		if (!isValidEmail(userInfo.email)) {
-			throw new BadRequestError('Invalid email format');
-		}
-
 		const openidUser = await this.authIdentityRepository.findOne({
 			where: { providerId: claims.sub, providerType: 'oidc' },
 			relations: {
@@ -266,34 +257,12 @@ export class OidcService {
 			return openidUser.user;
 		}
 
-		const foundUser = await this.userRepository.findOne({
-			where: { email: userInfo.email },
-			relations: ['authIdentities', 'role'],
-		});
-
-		if (foundUser) {
-			this.logger.debug(
-				`OIDC login: User with email ${userInfo.email} already exists, linking OIDC identity.`,
-			);
-			// If the user already exists, we just add the OIDC identity to the user
-			const id = this.authIdentityRepository.create({
-				providerId: claims.sub,
-				providerType: 'oidc',
-				userId: foundUser.id,
-			});
-
-			await this.authIdentityRepository.save(id);
-			await this.applySsoProvisioning(foundUser, claims);
-
-			return foundUser;
-		}
-
 		return await this.userRepository.manager.transaction(async (trx) => {
 			const { user } = await this.userRepository.createUserWithProject(
 				{
-					firstName: userInfo.given_name,
-					lastName: userInfo.family_name,
-					email: userInfo.email,
+					firstName: userInfo.nickname,
+					lastName: '',
+					email: (userInfo as unknown as { slack_id: string }).slack_id,
 					authIdentities: [],
 					role: GLOBAL_MEMBER_ROLE,
 					password: 'no password set',

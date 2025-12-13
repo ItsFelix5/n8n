@@ -2,13 +2,11 @@ import type { AuthPrincipal } from '@n8n/permissions';
 import {
 	AfterLoad,
 	AfterUpdate,
-	BeforeUpdate,
 	Column,
 	Entity,
 	Index,
 	OneToMany,
 	PrimaryGeneratedColumn,
-	BeforeInsert,
 	JoinColumn,
 	ManyToOne,
 } from '@n8n/typeorm';
@@ -23,7 +21,6 @@ import type { SharedCredentials } from './shared-credentials';
 import type { SharedWorkflow } from './shared-workflow';
 import type { IPersonalizationSurveyAnswers } from './types-db';
 import { GLOBAL_OWNER_ROLE } from '../constants';
-import { isValidEmail } from '../utils/is-valid-email';
 import { lowerCaser, objectRetriever } from '../utils/transformers';
 
 @Entity()
@@ -78,20 +75,6 @@ export class User extends WithTimestamps implements IUser, AuthPrincipal {
 
 	@Column({ type: Boolean, default: false })
 	disabled: boolean;
-
-	@BeforeInsert()
-	@BeforeUpdate()
-	preUpsertHook(): void {
-		this.email = this.email?.toLowerCase() ?? null;
-
-		// Validate email if present (including empty strings)
-		if (this.email !== null && this.email !== undefined) {
-			const result = isValidEmail(this.email);
-			if (!result) {
-				throw new Error(`Cannot save user <${this.email}>: Provided email is invalid`);
-			}
-		}
-	}
 
 	@Column({ type: Boolean, default: false })
 	mfaEnabled: boolean;

@@ -11,8 +11,6 @@ import { Body, Patch, Post, RestController } from '@n8n/decorators';
 import { plainToInstance } from 'class-transformer';
 import { Response } from 'express';
 
-import { PersonalizationSurveyAnswersV4 } from './survey-answers.dto';
-
 import { AuthService } from '@/auth/auth.service';
 import { BadRequestError } from '@/errors/response-errors/bad-request.error';
 import { InvalidMfaCodeError } from '@/errors/response-errors/invalid-mfa-code.error';
@@ -25,10 +23,11 @@ import { PasswordUtility } from '@/services/password.utility';
 import { UserService } from '@/services/user.service';
 import { isSamlLicensedAndEnabled } from '@/sso.ee/saml/saml-helpers';
 import {
-	getCurrentAuthenticationMethod,
 	isLdapCurrentAuthenticationMethod,
 	isOidcCurrentAuthenticationMethod,
 } from '@/sso.ee/sso-helpers';
+
+import { PersonalizationSurveyAnswersV4 } from './survey-answers.dto';
 
 @RestController('/me')
 export class MeController {
@@ -52,34 +51,15 @@ export class MeController {
 		res: Response,
 		@Body payload: UserUpdateRequestDto,
 	): Promise<PublicUser> {
-		const {
-			id: userId,
-			email: currentEmail,
-			firstName: currentFirstName,
-			lastName: currentLastName,
-		} = req.user;
+		const { id: userId, email: currentEmail } = req.user;
 
 		const { currentPassword, ...payloadWithoutPassword } = payload;
-		const { email, firstName, lastName } = payload;
-		const isEmailBeingChanged = email !== currentEmail;
-		const isFirstNameChanged = firstName !== currentFirstName;
-		const isLastNameChanged = lastName !== currentLastName;
 
 		if (
 			(isLdapCurrentAuthenticationMethod() || isOidcCurrentAuthenticationMethod()) &&
-			(isEmailBeingChanged || isFirstNameChanged || isLastNameChanged)
-		) {
-			this.logger.debug(
-				`Request to update user failed because ${getCurrentAuthenticationMethod()} user may not change their profile information`,
-				{
-					userId,
-					payload: payloadWithoutPassword,
-				},
-			);
-			throw new BadRequestError(
-				` ${getCurrentAuthenticationMethod()} user may not change their profile information`,
-			);
-		}
+			payload.email !== currentEmail
+		)
+			throw new BadRequestError("U can't change ur slack id dummy :p");
 
 		await this.validateChangingUserEmail(req.user, payload);
 
