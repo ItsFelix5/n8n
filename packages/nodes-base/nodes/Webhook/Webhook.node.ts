@@ -187,6 +187,18 @@ export class Webhook extends Node {
 					},
 				},
 			},
+			{
+				displayName: 'Unfurl URL',
+				name: 'unfurl',
+				type: 'boolean',
+				default: false,
+				description: 'Whether the production link should turn into a button in Slack',
+				displayOptions: {
+					show: {
+						httpMethod: ['GET'],
+					},
+				},
+			},
 
 			{
 				...optionsProperty,
