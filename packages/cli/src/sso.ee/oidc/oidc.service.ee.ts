@@ -187,8 +187,8 @@ export class OidcService {
 
 		// Include the custom n8n scope if provisioning is enabled
 		const scope = provisioningEnabled
-			? `openid+email+profile ${provisioningConfig.scopesName}`
-			: 'openid+email+profile';
+			? `openid+slack_id+profile ${provisioningConfig.scopesName}`
+			: 'openid+slack_id+profile';
 
 		const authorizationURL = client.buildAuthorizationUrl(configuration, {
 			redirect_uri: this.getCallbackUrl(),
