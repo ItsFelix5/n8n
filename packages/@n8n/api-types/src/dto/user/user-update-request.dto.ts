@@ -24,7 +24,7 @@ const nameSchema = () =>
 		});
 
 export class UserUpdateRequestDto extends Z.class({
-	email: z.string().email(),
+	email: z.string(),
 	firstName: nameSchema().optional(),
 	lastName: nameSchema().optional(),
 	mfaCode: z.string().optional(),

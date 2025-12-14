@@ -27,12 +27,9 @@ export class UrlService {
 	}
 
 	private generateBaseUrl(): string {
-		const { path, port, host, protocol } = this.globalConfig;
+		const { path, host, protocol } = this.globalConfig;
 
-		if ((protocol === 'http' && port === 80) || (protocol === 'https' && port === 443)) {
-			return `${protocol}://${host}${path}`;
-		}
-		return `${protocol}://${host}:${port}${path}`;
+		return `${protocol}://${host}${path}`;
 	}
 
 	/** Remove leading and trailing double quotes from a URL. */

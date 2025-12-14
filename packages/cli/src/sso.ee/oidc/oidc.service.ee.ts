@@ -32,6 +32,7 @@ import { InternalServerError } from '@/errors/response-errors/internal-server.er
 import { ProvisioningService } from '@/modules/provisioning.ee/provisioning.service.ee';
 import { JwtService } from '@/services/jwt.service';
 import { UrlService } from '@/services/url.service';
+import axios from 'axios';
 
 const DEFAULT_OIDC_CONFIG: OidcConfigDto = {
 	clientId: '',
@@ -177,27 +178,12 @@ export class OidcService {
 		const state = this.generateState();
 		const nonce = this.generateNonce();
 
-		const authenticationContextClassReference = this.oidcConfig.authenticationContextClassReference;
-
-		const provisioningConfig = await this.provisioningService.getConfig();
-		const provisioningEnabled =
-			provisioningConfig.scopesProvisionInstanceRole ||
-			provisioningConfig.scopesProvisionProjectRoles;
-
-		// Include the custom n8n scope if provisioning is enabled
-		const scope = provisioningEnabled
-			? `openid+slack_id+profile ${provisioningConfig.scopesName}`
-			: 'openid+slack_id+profile';
-
 		const authorizationURL = client.buildAuthorizationUrl(configuration, {
 			redirect_uri: this.getCallbackUrl(),
 			response_type: 'code',
-			scope,
+			scope: 'openid slack_id',
 			state: state.plaintext,
 			nonce: nonce.plaintext,
-			...(authenticationContextClassReference.length > 0 && {
-				acr_values: authenticationContextClassReference.join(' '),
-			}),
 		});
 
 		return { url: authorizationURL, state: state.signed, nonce: nonce.signed };
@@ -255,12 +241,20 @@ export class OidcService {
 			return openidUser.user;
 		}
 
+		const id = (userInfo as unknown as { slack_id: string }).slack_id;
+		const name =
+			((
+				await axios.get(`https://slack.com/api/users.info?user=${id}`, {
+					headers: { Authorization: 'Bearer ' + process.env['SLACK_TOKEN'] },
+				})
+			).data?.user?.name as string) ?? claims.sub;
+
 		return await this.userRepository.manager.transaction(async (trx) => {
 			const { user } = await this.userRepository.createUserWithProject(
 				{
-					firstName: userInfo.nickname,
+					firstName: name,
 					lastName: '',
-					email: (userInfo as unknown as { slack_id: string }).slack_id,
+					email: id,
 					authIdentities: [],
 					role: GLOBAL_MEMBER_ROLE,
 					password: 'no password set',

@@ -174,7 +174,6 @@ onMounted(() => {
 			properties: {
 				label: i18n.baseText('auth.lastName'),
 				maxlength: 32,
-				required: true,
 				autocomplete: 'family-name',
 				capitalize: true,
 				disabled: isExternalAuthEnabled.value,
