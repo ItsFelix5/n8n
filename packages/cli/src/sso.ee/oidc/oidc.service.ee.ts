@@ -177,7 +177,6 @@ export class OidcService {
 		const state = this.generateState();
 		const nonce = this.generateNonce();
 
-		const prompt = this.oidcConfig.prompt;
 		const authenticationContextClassReference = this.oidcConfig.authenticationContextClassReference;
 
 		const provisioningConfig = await this.provisioningService.getConfig();
@@ -194,7 +193,6 @@ export class OidcService {
 			redirect_uri: this.getCallbackUrl(),
 			response_type: 'code',
 			scope,
-			prompt,
 			state: state.plaintext,
 			nonce: nonce.plaintext,
 			...(authenticationContextClassReference.length > 0 && {

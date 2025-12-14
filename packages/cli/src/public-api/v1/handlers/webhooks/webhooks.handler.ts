@@ -9,13 +9,13 @@ import { WebhookService } from '@/webhooks/webhook.service';
 export = {
 	find: [
 		async (
-			req: AuthenticatedRequest<{}, {}, {}, { method: IHttpRequestMethods; url: string }>,
+			req: AuthenticatedRequest<{ url: string }, {}, {}, { method: IHttpRequestMethods }>,
 			res: Response,
 		): Promise<Response> => {
 			try {
 				const result = await Container.get(WebhookService).findWebhook(
 					req.query.method,
-					req.query.url,
+					req.params.url,
 				);
 
 				if (!hasGlobalScope(req.user, 'workflow:read'))

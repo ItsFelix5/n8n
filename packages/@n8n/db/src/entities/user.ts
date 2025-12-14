@@ -21,7 +21,7 @@ import type { SharedCredentials } from './shared-credentials';
 import type { SharedWorkflow } from './shared-workflow';
 import type { IPersonalizationSurveyAnswers } from './types-db';
 import { GLOBAL_OWNER_ROLE } from '../constants';
-import { lowerCaser, objectRetriever } from '../utils/transformers';
+import { objectRetriever } from '../utils/transformers';
 
 @Entity()
 export class User extends WithTimestamps implements IUser, AuthPrincipal {
@@ -31,7 +31,6 @@ export class User extends WithTimestamps implements IUser, AuthPrincipal {
 	@Column({
 		length: 254,
 		nullable: true,
-		transformer: lowerCaser,
 	})
 	@Index({ unique: true })
 	email: string;

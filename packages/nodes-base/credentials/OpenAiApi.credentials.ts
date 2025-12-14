@@ -41,7 +41,7 @@ export class OpenAiApi implements ICredentialType {
 					value: 'https://api.openai.com/v1',
 				},
 				{
-					name: 'Hack Club ai',
+					name: 'Hack Club AI',
 					value: 'https://ai.hackclub.com/proxy/v1',
 				},
 				{
@@ -53,44 +53,16 @@ export class OpenAiApi implements ICredentialType {
 			description: 'Select a base URL for the API or enter a custom one',
 		},
 		{
-			displayName: 'Custom Endpoints',
-			name: 'customEndpoints',
-			type: 'fixedCollection',
-			typeOptions: {
-				multipleValues: true,
-			},
+			displayName: 'Custom Endpoint',
+			name: 'customUrl',
+			type: 'string',
 			displayOptions: {
 				show: {
 					url: ['custom'],
 				},
 			},
-			default: {},
-			placeholder: 'Add Custom Endpoint',
-			options: [
-				{
-					name: 'endpoints',
-					displayName: 'Endpoint',
-					values: [
-						{
-							displayName: 'Name',
-							name: 'name',
-							type: 'string',
-							default: '',
-							placeholder: 'My Custom API',
-							description: 'A friendly name for this endpoint',
-						},
-						{
-							displayName: 'URL',
-							name: 'url',
-							type: 'string',
-							default: '',
-							placeholder: 'https://your-custom-api.com/v1',
-							description: 'The base URL for this endpoint',
-						},
-					],
-				},
-			],
-			description: 'Add one or more custom API endpoints',
+			default: 'https://your-custom-api.com/v1',
+			description: 'The base URL for this endpoint',
 		},
 		{
 			displayName: 'Add Custom Header',
@@ -128,7 +100,7 @@ export class OpenAiApi implements ICredentialType {
 	test: ICredentialTestRequest = {
 		request: {
 			baseURL:
-				'={{$credentials?.url === "custom" ? ($credentials?.customEndpoints?.endpoints?.[0]?.url || "") : $credentials?.url}}',
+				'={{$credentials?.url === "custom" ? ($credentials?.customUrl || "") : $credentials?.url}}',
 			url: '/models',
 		},
 	};
@@ -151,15 +123,9 @@ export class OpenAiApi implements ICredentialType {
 			requestOptions.headers[credentials.headerName] = credentials.headerValue;
 		}
 
-		// Use custom URL if selected, otherwise use the selected preset
-		if (credentials.url === 'custom' && credentials.customEndpoints) {
-			const endpoints = (credentials.customEndpoints as any)?.endpoints;
-			if (endpoints && Array.isArray(endpoints) && endpoints.length > 0) {
-				requestOptions.baseURL = endpoints[0].url as string;
-			}
-		} else {
-			requestOptions.baseURL = credentials.url as string;
-		}
+		requestOptions.baseURL = (
+			credentials.url === 'custom' ? credentials.url : credentials.customUrl
+		) as string;
 
 		return requestOptions;
 	}
