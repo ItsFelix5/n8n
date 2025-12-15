@@ -224,10 +224,7 @@ export const channelFields: INodeProperties[] = [
 	{
 		displayName: 'User Names or IDs',
 		name: 'userIds',
-		type: 'multiOptions',
-		typeOptions: {
-			loadOptionsMethod: 'getUsers',
-		},
+		type: 'collection',
 		default: [],
 		displayOptions: {
 			show: {
@@ -303,12 +300,9 @@ export const channelFields: INodeProperties[] = [
 	{
 		displayName: 'User Name or ID',
 		name: 'userId',
-		type: 'options',
+		type: 'string',
 		description:
 			'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
-		typeOptions: {
-			loadOptionsMethod: 'getUsers',
-		},
 		displayOptions: {
 			show: {
 				operation: ['kick'],
@@ -629,10 +623,7 @@ export const channelFields: INodeProperties[] = [
 			{
 				displayName: 'User Names or IDs',
 				name: 'users',
-				type: 'multiOptions',
-				typeOptions: {
-					loadOptionsMethod: 'getUsers',
-				},
+				type: 'collection',
 				default: [],
 				description:
 					'If only one user is included, this creates a 1:1 DM. The ordering of the users is preserved whenever a multi-person direct message is returned. Supply a channel when not supplying users. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',

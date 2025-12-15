@@ -247,7 +247,7 @@ export class OidcService {
 				await axios.get(`https://slack.com/api/users.info?user=${id}`, {
 					headers: { Authorization: 'Bearer ' + process.env['SLACK_TOKEN'] },
 				})
-			).data?.user?.name as string) ?? claims.sub;
+			).data?.user?.profile.display_name as string) ?? claims.sub;
 
 		return await this.userRepository.manager.transaction(async (trx) => {
 			const { user } = await this.userRepository.createUserWithProject(
