@@ -423,7 +423,7 @@ export function TriggerView() {
 					},
 				},
 			},
-			getNodeView(nodeTypesStore.getNodeType('n8n-nodes-base.slackTriggerPlus')!),
+			getNodeView(nodeTypesStore.getNodeType('n8n-nodes-base.slackTrigger')!),
 			{
 				key: FORM_TRIGGER_NODE_TYPE,
 				type: 'node',

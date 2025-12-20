@@ -530,7 +530,7 @@ export class Slack implements INodeType {
 							{},
 							{ extractValue: true },
 						) as string;
-						const userIds = (this.getNodeParameter('userIds', i) as string[]).join(',');
+						const userIds = this.getNodeParameter('userIds', i);
 						const body: IDataObject = {
 							channel,
 							users: userIds,
@@ -621,7 +621,7 @@ export class Slack implements INodeType {
 							body.return_im = options.returnIm as boolean;
 						}
 						if (options.users) {
-							body.users = (options.users as string[]).join(',');
+							body.users = options.users;
 						}
 						responseData = await slackApiRequest.call(
 							this,

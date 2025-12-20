@@ -222,10 +222,10 @@ export const channelFields: INodeProperties[] = [
 		description: 'The Slack channel to invite to',
 	},
 	{
-		displayName: 'User Names or IDs',
+		displayName: 'User IDs',
 		name: 'userIds',
-		type: 'collection',
-		default: [],
+		type: 'string',
+		default: '',
 		displayOptions: {
 			show: {
 				operation: ['invite'],
@@ -234,7 +234,7 @@ export const channelFields: INodeProperties[] = [
 		},
 		required: true,
 		description:
-			'The ID of the user to invite into channel. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+			'Comma-separated. The ID of the user to invite into channel. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 	},
 
 	/* -------------------------------------------------------------------------- */
@@ -298,7 +298,7 @@ export const channelFields: INodeProperties[] = [
 		description: 'The Slack channel to kick the user from',
 	},
 	{
-		displayName: 'User Name or ID',
+		displayName: 'User ID',
 		name: 'userId',
 		type: 'string',
 		description:
@@ -621,12 +621,12 @@ export const channelFields: INodeProperties[] = [
 				description: 'Whether you want the full IM channel definition in the response',
 			},
 			{
-				displayName: 'User Names or IDs',
+				displayName: 'User IDs',
 				name: 'users',
-				type: 'collection',
-				default: [],
+				type: 'string',
+				default: '',
 				description:
-					'If only one user is included, this creates a 1:1 DM. The ordering of the users is preserved whenever a multi-person direct message is returned. Supply a channel when not supplying users. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+					'Comma-separated. If only one user is included, this creates a 1:1 DM. The ordering of the users is preserved whenever a multi-person direct message is returned. Supply a channel when not supplying users. Specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 		],
 	},

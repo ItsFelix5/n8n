@@ -96,7 +96,6 @@ const onSecondaryButtonClick = (event: Event) => emit('secondaryClick', event);
 	padding: var(--spacing--lg);
 	border: var(--border);
 	border-radius: var(--radius--lg);
-	box-shadow: 0 4px 16px rgba(99, 77, 255, 0.06);
 }
 
 .inputsContainer {

@@ -8,7 +8,6 @@ import type { IFormInputs, ThemeOption } from '@/Interface';
 import type { IUser } from '@n8n/rest-api-client/api/users';
 import {
 	CHANGE_PASSWORD_MODAL_KEY,
-	CONFIRM_PASSWORD_MODAL_KEY,
 	MFA_DOCS_URL,
 	MFA_SETUP_MODAL_KEY,
 	PROMPT_MFA_CODE_MODAL_KEY,
@@ -22,8 +21,6 @@ import type { MfaModalEvents } from '../auth.eventBus';
 import { promptMfaCodeBus } from '../auth.eventBus';
 import type { BaseTextKey } from '@n8n/i18n';
 import { useSSOStore } from '@/features/settings/sso/sso.store';
-import type { ConfirmPasswordModalEvents } from '../auth.eventBus';
-import { confirmPasswordEventBus } from '../auth.eventBus';
 
 import {
 	N8nAvatar,
@@ -184,6 +181,7 @@ onMounted(() => {
 			initialValue: currentUser.value?.email,
 			properties: {
 				label: 'Slack ID',
+				required: true,
 				disabled: true,
 			},
 		},

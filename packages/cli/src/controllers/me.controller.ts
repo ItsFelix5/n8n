@@ -59,7 +59,7 @@ export class MeController {
 			(isLdapCurrentAuthenticationMethod() || isOidcCurrentAuthenticationMethod()) &&
 			payload.email !== currentEmail
 		)
-			throw new BadRequestError("U can't change ur slack id dummy :p");
+			throw new BadRequestError("You can't change ur slack id silly :p");
 
 		await this.externalHooks.run('user.profile.beforeUpdate', [
 			userId,

@@ -233,7 +233,7 @@ export class ActiveWorkflowManager {
 
 	async addEvents(workflow: Workflow) {
 		const triggers = Object.values(workflow.nodes).filter(
-			(node) => node.type === 'n8n-nodes-base.slackTriggerPlus',
+			(node) => node.type === 'n8n-nodes-base.slackTrigger',
 		);
 
 		const paths: Map<string, string[]> = new Map();

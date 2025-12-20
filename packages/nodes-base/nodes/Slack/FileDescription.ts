@@ -295,12 +295,12 @@ export const fileFields: INodeProperties[] = [
 				description: 'Filter files by type',
 			},
 			{
-				displayName: 'User Name or ID',
+				displayName: 'User ID',
 				name: 'userId',
 				type: 'string',
 				default: '',
 				description:
-					'Filter files created by a single user. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+					'Filter files created by a single user. You can specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 		],
 	},
