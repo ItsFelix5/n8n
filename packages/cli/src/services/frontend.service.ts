@@ -27,7 +27,6 @@ import { isApiEnabled } from '@/public-api';
 import { PushConfig } from '@/push/push.config';
 import { getSamlLoginLabel } from '@/sso.ee/saml/saml-helpers';
 import { getCurrentAuthenticationMethod } from '@/sso.ee/sso-helpers';
-import { UserManagementMailer } from '@/user-management/email';
 import {
 	getWorkflowHistoryLicensePruneTime,
 	getWorkflowHistoryPruneTime,
@@ -105,7 +104,6 @@ export class FrontendService {
 		private readonly credentialTypes: CredentialTypes,
 		private readonly credentialsOverwrites: CredentialsOverwrites,
 		private readonly license: License,
-		private readonly mailer: UserManagementMailer,
 		private readonly instanceSettings: InstanceSettings,
 		private readonly urlService: UrlService,
 		private readonly securityConfig: SecurityConfig,
@@ -230,7 +228,7 @@ export class FrontendService {
 			userManagement: {
 				quota: this.license.getUsersLimit(),
 				showSetupOnFirstLoad: !(await this.ownershipService.hasInstanceOwner()),
-				smtpSetup: this.mailer.isEmailSetUp,
+				smtpSetup: false,
 				authenticationMethod: getCurrentAuthenticationMethod(),
 			},
 			sso: {

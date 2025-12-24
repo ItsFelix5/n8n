@@ -7,8 +7,6 @@ import {
 import type { Project, User, Role } from '@n8n/db';
 import { GLOBAL_MEMBER_ROLE, GLOBAL_OWNER_ROLE } from '@n8n/db';
 
-import { UserManagementMailer } from '@/user-management/email';
-
 import { createCustomRoleWithScopeSlugs, cleanupRolesAndScopes } from '../shared/db/roles';
 import { createAdmin, createOwner, createMember } from '../shared/db/users';
 import type { SuperAgentTest } from '../shared/types';
@@ -72,12 +70,6 @@ export function createTestServer() {
  * Sets up the complete test context with users, projects, roles, and authentication agents
  */
 export async function setupTestContext(): Promise<TestContext> {
-	// Mock required services
-	mockInstance(UserManagementMailer, {
-		invite: jest.fn(),
-		passwordReset: jest.fn(),
-	});
-
 	// Create the test server
 	const testServer = createTestServer();
 

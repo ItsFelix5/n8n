@@ -20,7 +20,6 @@ import type { Invitation } from '@/interfaces';
 import type { PostHogClient } from '@/posthog';
 import type { UserRequest } from '@/requests';
 import { UrlService } from '@/services/url.service';
-import { UserManagementMailer } from '@/user-management/email';
 
 import { PublicApiKeyService } from './public-api-key.service';
 import { RoleService } from './role.service';
@@ -31,7 +30,6 @@ export class UserService {
 		private readonly logger: Logger,
 		private readonly userRepository: UserRepository,
 		private readonly projectRepository: ProjectRepository,
-		private readonly mailer: UserManagementMailer,
 		private readonly urlService: UrlService,
 		private readonly eventService: EventService,
 		private readonly publicApiKeyService: PublicApiKeyService,
@@ -167,24 +165,10 @@ export class UserService {
 				};
 
 				try {
-					const result = await this.mailer.invite({
-						email,
-						inviteAcceptUrl,
-					});
-					if (result.emailSent) {
-						invitedUser.user.emailSent = true;
-
-						this.eventService.emit('user-transactional-email-sent', {
-							userId: id,
-							messageType: 'New user invite',
-							publicApi: false,
-						});
-					}
-
 					// Only include the invite URL in the response if
 					// the users configuration allows it
 					// and the email was not sent (to allow manual copy-paste)
-					if (!inviteLinksEmailOnly && !result.emailSent) {
+					if (!inviteLinksEmailOnly) {
 						invitedUser.user.inviteAcceptUrl = inviteAcceptUrl;
 					}
 
@@ -192,7 +176,7 @@ export class UserService {
 						user: owner,
 						targetUserId: Object.values(toInviteUsers),
 						publicApi: false,
-						emailSent: result.emailSent,
+						emailSent: false,
 						inviteeRole: role, // same role for all invited users
 					});
 				} catch (e) {

@@ -35,7 +35,6 @@ import {
 	TeamProjectOverQuotaError,
 	UnlicensedProjectRoleError,
 } from '@/services/project.service.ee';
-import { UserManagementMailer } from '@/user-management/email';
 
 @RestController('/projects')
 export class ProjectController {
@@ -43,7 +42,6 @@ export class ProjectController {
 		private readonly projectsService: ProjectService,
 		private readonly projectRepository: ProjectRepository,
 		private readonly eventService: EventService,
-		private readonly userManagementMailer: UserManagementMailer,
 	) {}
 
 	@Get('/')
@@ -233,16 +231,10 @@ export class ProjectController {
 		@Body payload: AddUsersToProjectDto,
 	) {
 		try {
-			const { added, conflicts, project } =
-				await this.projectsService.addUsersWithConflictSemantics(projectId, payload.relations);
-
-			if (added.length > 0) {
-				await this.userManagementMailer.notifyProjectShared({
-					sharer: req.user,
-					newSharees: added,
-					project: { id: project.id, name: project.name },
-				});
-			}
+			const { added, conflicts } = await this.projectsService.addUsersWithConflictSemantics(
+				projectId,
+				payload.relations,
+			);
 
 			const relations = await this.projectsService.getProjectRelations(projectId);
 			this.eventService.emit('team-project-updated', {

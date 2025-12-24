@@ -54,7 +54,6 @@ import { FolderService } from '@/services/folder.service';
 import { NamingService } from '@/services/naming.service';
 import { ProjectService } from '@/services/project.service.ee';
 import { TagService } from '@/services/tag.service';
-import { UserManagementMailer } from '@/user-management/email';
 import * as utils from '@/utils';
 import * as WorkflowHelpers from '@/workflow-helpers';
 import { userHasScopes } from '@/permissions.ee/check-access';
@@ -82,7 +81,6 @@ export class WorkflowsController {
 		private readonly workflowExecutionService: WorkflowExecutionService,
 		private readonly sharedWorkflowRepository: SharedWorkflowRepository,
 		private readonly license: License,
-		private readonly mailer: UserManagementMailer,
 		private readonly credentialsService: CredentialsService,
 		private readonly projectRepository: ProjectRepository,
 		private readonly projectService: ProjectService,
@@ -669,12 +667,6 @@ export class WorkflowsController {
 		const projectsRelations = await this.projectRelationRepository.findBy({
 			projectId: In(newShareeIds),
 			role: { slug: PROJECT_OWNER_ROLE_SLUG },
-		});
-
-		await this.mailer.notifyWorkflowShared({
-			sharer: req.user,
-			newShareeIds: projectsRelations.map((pr) => pr.userId),
-			workflow,
 		});
 	}
 

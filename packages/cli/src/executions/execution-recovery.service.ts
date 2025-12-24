@@ -21,7 +21,6 @@ import { WorkflowCrashedError } from '@/errors/workflow-crashed.error';
 import { getLifecycleHooksForRegularMain } from '@/execution-lifecycle/execution-lifecycle-hooks';
 import { Push } from '@/push';
 import { OwnershipService } from '@/services/ownership.service';
-import { UserManagementMailer } from '@/user-management/email/user-management-mailer';
 
 import type { EventMessageTypes } from '../eventbus/event-message-classes';
 
@@ -37,7 +36,6 @@ export class ExecutionRecoveryService {
 		private readonly executionRepository: ExecutionRepository,
 		private readonly executionsConfig: ExecutionsConfig,
 		private readonly workflowRepository: WorkflowRepository,
-		private readonly userManagementMailer: UserManagementMailer,
 		private readonly ownershipService: OwnershipService,
 		private readonly projectRelationRepository: ProjectRelationRepository,
 	) {}
@@ -71,12 +69,6 @@ export class ExecutionRecoveryService {
 					this.logger.warn(
 						`Autodeactivated workflow ${workflowId} due to too many crashed executions.`,
 					);
-
-					const recipient = await this.getAutodeactivationRecipient(workflow);
-					await this.userManagementMailer.notifyWorkflowAutodeactivated({
-						recipient,
-						workflow,
-					});
 
 					this.push.once('editorUiConnected', async () => {
 						await sleep(1000);

@@ -1,5 +1,4 @@
 import { Service } from '@n8n/di';
-import type { NeededNodeType } from '@n8n/task-runner';
 import type { Dirent } from 'fs';
 import { readdir } from 'fs/promises';
 import { RoutingNode } from 'n8n-core';
@@ -133,7 +132,12 @@ export class NodeTypes implements INodeTypes {
 		);
 	}
 
-	getNodeTypeDescriptions(nodeTypes: NeededNodeType[]): INodeTypeDescription[] {
+	getNodeTypeDescriptions(
+		nodeTypes: {
+			name: string;
+			version: number;
+		}[],
+	): INodeTypeDescription[] {
 		return nodeTypes.map(({ name: nodeTypeName, version: nodeTypeVersion }) => {
 			const nodeType = this.loadNodesAndCredentials.getNode(nodeTypeName);
 			const { description } = NodeHelpers.getVersionedNodeType(nodeType.type, nodeTypeVersion);
