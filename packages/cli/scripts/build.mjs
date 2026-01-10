@@ -10,7 +10,6 @@ const __dirname = path.dirname(__filename);
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const SPEC_FILENAME = 'openapi.yml';
-const SPEC_THEME_FILENAME = 'swagger-theme.css';
 
 const publicApiEnabled = process.env.N8N_PUBLIC_API_DISABLED !== 'true';
 
@@ -19,7 +18,6 @@ generateTimezoneData();
 
 if (publicApiEnabled) {
 	createPublicApiDirectory();
-	copySwaggerTheme();
 	bundleOpenApiSpecs();
 }
 
@@ -47,15 +45,6 @@ function createPublicApiDirectory() {
 		console.log('Creating directory', publicApiDirectory);
 		mkdirSync(publicApiDirectory, { recursive: true });
 	}
-}
-
-function copySwaggerTheme() {
-	const swaggerTheme = {
-		source: path.resolve(ROOT_DIR, 'src', 'public-api', SPEC_THEME_FILENAME),
-		destination: path.resolve(ROOT_DIR, 'dist', 'public-api'),
-	};
-
-	shell.cp('-r', swaggerTheme.source, swaggerTheme.destination);
 }
 
 function bundleOpenApiSpecs() {
