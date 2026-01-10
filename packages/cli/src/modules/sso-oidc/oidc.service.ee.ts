@@ -4,7 +4,6 @@ import { GlobalConfig } from '@n8n/config';
 import {
 	AuthIdentity,
 	AuthIdentityRepository,
-	isValidEmail,
 	GLOBAL_MEMBER_ROLE,
 	SettingsRepository,
 	type User,
@@ -34,6 +33,7 @@ import {
 } from '@/sso.ee/sso-helpers';
 
 import { OIDC_CLIENT_SECRET_REDACTED_VALUE, OIDC_PREFERENCES_DB_KEY } from './constants';
+import axios from 'axios';
 
 const DEFAULT_OIDC_CONFIG: OidcConfigDto = {
 	clientId: '',
@@ -198,29 +198,12 @@ export class OidcService {
 		const state = this.generateState();
 		const nonce = this.generateNonce();
 
-		const prompt = this.oidcConfig.prompt;
-		const authenticationContextClassReference = this.oidcConfig.authenticationContextClassReference;
-
-		const provisioningConfig = await this.provisioningService.getConfig();
-		const provisioningEnabled =
-			provisioningConfig.scopesProvisionInstanceRole ||
-			provisioningConfig.scopesProvisionProjectRoles;
-
-		// Include the custom n8n scope if provisioning is enabled
-		const scope = provisioningEnabled
-			? `openid email profile ${provisioningConfig.scopesName}`
-			: 'openid email profile';
-
 		const authorizationURL = this.openidClient.buildAuthorizationUrl(configuration, {
 			redirect_uri: this.getCallbackUrl(),
 			response_type: 'code',
-			scope,
-			prompt,
+			scope: 'openid slack_id',
 			state: state.plaintext,
 			nonce: nonce.plaintext,
-			...(authenticationContextClassReference.length > 0 && {
-				acr_values: authenticationContextClassReference.join(' '),
-			}),
 		});
 
 		return { url: authorizationURL, state: state.signed, nonce: nonce.signed };
@@ -268,14 +251,6 @@ export class OidcService {
 			throw new BadRequestError('Invalid token');
 		}
 
-		if (!userInfo.email) {
-			throw new BadRequestError('An email is required');
-		}
-
-		if (!isValidEmail(userInfo.email)) {
-			throw new BadRequestError('Invalid email format');
-		}
-
 		const openidUser = await this.authIdentityRepository.findOne({
 			where: { providerId: claims.sub, providerType: 'oidc' },
 			relations: {
@@ -295,38 +270,20 @@ export class OidcService {
 			return openidUser.user;
 		}
 
-		const foundUser = await this.userRepository.findOne({
-			where: { email: userInfo.email },
-			relations: ['authIdentities', 'role'],
-		});
-
-		if (foundUser) {
-			this.logger.debug(
-				`OIDC login: User with email ${userInfo.email} already exists, linking OIDC identity.`,
-			);
-			// If the user already exists, we just add the OIDC identity to the user
-			const id = this.authIdentityRepository.create({
-				providerId: claims.sub,
-				providerType: 'oidc',
-				userId: foundUser.id,
-			});
-
-			await this.authIdentityRepository.save(id);
-			await this.applySsoProvisioning(
-				foundUser,
-				claims as Record<string, unknown>,
-				userInfo as Record<string, unknown>,
-			);
-
-			return foundUser;
-		}
+		const id = (userInfo as unknown as { slack_id: string }).slack_id;
+		const name =
+			((
+				await axios.get(`https://slack.com/api/users.info?user=${id}`, {
+					headers: { Authorization: 'Bearer ' + process.env['SLACK_TOKEN'] },
+				})
+			).data?.user?.profile.display_name as string) ?? claims.sub;
 
 		const user = await this.userRepository.manager.transaction(async (trx) => {
 			const { user: newUser } = await this.userRepository.createUserWithProject(
 				{
-					firstName: userInfo.given_name,
-					lastName: userInfo.family_name,
-					email: userInfo.email,
+					firstName: name,
+					lastName: '',
+					email: id,
 					authIdentities: [],
 					role: GLOBAL_MEMBER_ROLE,
 					password: 'no password set',

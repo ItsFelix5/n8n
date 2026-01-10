@@ -27,7 +27,7 @@ export const userBaseSchema = z.object({
 	id: z.string(),
 	firstName: z.string().nullable().optional(),
 	lastName: z.string().nullable().optional(),
-	email: z.string().email().nullable().optional(),
+	email: z.string().nullable().optional(),
 	role: roleSchema.optional(),
 });
 
