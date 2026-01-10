@@ -522,6 +522,8 @@ function onConnectStart(handle: ConnectStartEvent) {
 }
 
 function onConnect(connection: Connection) {
+	if (connection.source === connection.target)
+		alert('Yes you can create infinite loops, but running them will get you banned >:(');
 	emit('create:connection', connection);
 
 	connectedHandle.value = connection;

@@ -357,6 +357,7 @@ export function AINodesView(_nodes: SimplifiedNodeType[]): NodeView {
 export function TriggerView() {
 	const i18n = useI18n();
 	const evaluationStore = useEvaluationStore();
+	const nodeTypesStore = useNodeTypesStore();
 	const isEvaluationEnabled = evaluationStore.isEvaluationEnabled;
 
 	const evaluationTriggerNode = isEvaluationEnabled
@@ -405,18 +406,6 @@ export function TriggerView() {
 				},
 			},
 			{
-				key: SCHEDULE_TRIGGER_NODE_TYPE,
-				type: 'node',
-				category: [CORE_NODES_CATEGORY],
-				properties: {
-					group: [],
-					name: SCHEDULE_TRIGGER_NODE_TYPE,
-					displayName: i18n.baseText('nodeCreator.triggerHelperPanel.scheduleTriggerDisplayName'),
-					description: i18n.baseText('nodeCreator.triggerHelperPanel.scheduleTriggerDescription'),
-					icon: 'fa:clock',
-				},
-			},
-			{
 				key: WEBHOOK_NODE_TYPE,
 				type: 'node',
 				category: [CORE_NODES_CATEGORY],
@@ -428,6 +417,7 @@ export function TriggerView() {
 					iconData: { type: 'icon', icon: 'webhook' },
 				},
 			},
+			getNodeView(nodeTypesStore.getNodeType('n8n-nodes-base.slackTrigger')!),
 			{
 				key: FORM_TRIGGER_NODE_TYPE,
 				type: 'node',
@@ -462,6 +452,18 @@ export function TriggerView() {
 					displayName: i18n.baseText('nodeCreator.triggerHelperPanel.chatTriggerDisplayName'),
 					description: i18n.baseText('nodeCreator.triggerHelperPanel.chatTriggerDescription'),
 					icon: 'fa:comments',
+				},
+			},
+			{
+				key: SCHEDULE_TRIGGER_NODE_TYPE,
+				type: 'node',
+				category: [CORE_NODES_CATEGORY],
+				properties: {
+					group: [],
+					name: SCHEDULE_TRIGGER_NODE_TYPE,
+					displayName: i18n.baseText('nodeCreator.triggerHelperPanel.scheduleTriggerDisplayName'),
+					description: i18n.baseText('nodeCreator.triggerHelperPanel.scheduleTriggerDescription'),
+					icon: 'fa:clock',
 				},
 			},
 			...(evaluationTriggerNode ? [evaluationTriggerNode] : []),
@@ -638,6 +640,8 @@ export function RegularView(nodes: SimplifiedNodeType[]) {
 			description: i18n.baseText('nodeCreator.triggerHelperPanel.addAnotherTriggerDescription'),
 		},
 	});
+
+	view.items.push(getNodeView(useNodeTypesStore().getNodeType('n8n-nodes-base.slack')!));
 
 	return view;
 }
