@@ -44,6 +44,11 @@ const {
 
 <template>
 	<div :class="$style.container">
+		<img
+			style="position: absolute; top: 0; left: 10px; border: 0; width: 128px; z-index: 999"
+			src="https://assets.hackclub.com/flag-orpheus-top.svg"
+			alt="Hack Club"
+		/>
 		<N8nLogo size="large" :release-channel="releaseChannel" />
 		<div v-if="subtitle" :class="$style.textContainer">
 			<N8nText size="large">{{ subtitle }}</N8nText>
