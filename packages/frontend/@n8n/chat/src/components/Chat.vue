@@ -3,7 +3,6 @@ import Close from 'virtual:icons/mdi/close';
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 
 import GetStarted from '@n8n/chat/components/GetStarted.vue';
-import GetStartedFooter from '@n8n/chat/components/GetStartedFooter.vue';
 import Input from '@n8n/chat/components/Input.vue';
 import type { ArrowKeyDownPayload } from '@n8n/chat/components/Input.vue';
 import Layout from '@n8n/chat/components/Layout.vue';
@@ -148,7 +147,6 @@ onUnmounted(() => {
 		<MessagesList v-else :messages="messages" />
 		<template #footer>
 			<Input v-if="currentSessionId" @arrow-key-down="onArrowKeyDown" />
-			<GetStartedFooter v-else />
 		</template>
 	</Layout>
 </template>

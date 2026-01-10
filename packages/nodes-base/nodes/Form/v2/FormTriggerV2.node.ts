@@ -10,7 +10,6 @@ import {
 } from 'n8n-workflow';
 
 import {
-	appendAttributionToForm,
 	formDescription,
 	formFields,
 	formFieldsDynamic,
@@ -147,7 +146,6 @@ const descriptionV2: INodeTypeDescription = {
 			placeholder: 'Add option',
 			default: {},
 			options: [
-				appendAttributionToForm,
 				ipAllowlist,
 				{
 					displayName: 'Button Label',
