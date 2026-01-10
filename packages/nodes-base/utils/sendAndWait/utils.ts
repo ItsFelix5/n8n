@@ -66,15 +66,6 @@ const limitWaitTimeOption: INodeProperties = {
 	],
 };
 
-const appendAttributionOption: INodeProperties = {
-	displayName: 'Append n8n Attribution',
-	name: 'appendAttribution',
-	type: 'boolean',
-	default: true,
-	description:
-		'Whether to include the phrase "This message was sent automatically with n8n" to the end of the message',
-};
-
 // Operation Properties ----------------------------------------------------------
 export function getSendAndWaitProperties(
 	targetProperties: INodeProperties[],
@@ -250,7 +241,7 @@ export function getSendAndWaitProperties(
 			type: 'collection',
 			placeholder: 'Add option',
 			default: {},
-			options: [limitWaitTimeOption, appendAttributionOption],
+			options: [limitWaitTimeOption],
 			displayOptions: {
 				show: {
 					responseType: ['approval'],
@@ -302,7 +293,6 @@ export function getSendAndWaitProperties(
 					description: 'Override default styling of the response form with CSS',
 				},
 				limitWaitTimeOption,
-				appendAttributionOption,
 			],
 			displayOptions: {
 				show: {
@@ -493,13 +483,11 @@ export function getSendAndWaitConfig(context: IExecuteFunctions): SendAndWaitCon
 		buttonDisapprovalStyle?: string;
 	};
 
-	const options = context.getNodeParameter('options', 0, {});
-
 	const config: SendAndWaitConfig = {
 		title: subject,
 		message,
 		options: [],
-		appendAttribution: options?.appendAttribution as boolean,
+		appendAttribution: false,
 	};
 
 	const responseType = context.getNodeParameter('responseType', 0, 'approval') as string;

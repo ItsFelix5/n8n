@@ -176,18 +176,7 @@ export const useTemplatesStore = defineStore(STORES.TEMPLATES, () => {
 	);
 
 	const websiteTemplateRepositoryParameters = computed(() => {
-		const defaultParameters: Record<string, string> = {
-			...TEMPLATES_URLS.UTM_QUERY,
-			utm_instance: currentN8nPath.value,
-			utm_n8n_version: rootStore.versionCli,
-			utm_awc: String(workflowsStore.activeWorkflows.length),
-		};
-		if (userRole.value) {
-			defaultParameters.utm_user_role = userRole.value;
-		}
-		return new URLSearchParams({
-			...defaultParameters,
-		});
+		return new URLSearchParams({});
 	});
 
 	const websiteTemplateRepositoryURL = computed(
