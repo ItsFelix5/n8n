@@ -42,14 +42,11 @@ function createLazySwaggerMiddleware(
 			];
 
 			const { serveFiles, setup } = await import('swagger-ui-express');
-			const swaggerThemePath = path.join(__dirname, 'swagger-theme.css');
-			const swaggerThemeCss = await fs.readFile(swaggerThemePath, { encoding: 'utf-8' });
 
 			cachedRouter = express.Router();
 			cachedRouter.use(
 				serveFiles(swaggerDocument),
 				setup(swaggerDocument, {
-					customCss: swaggerThemeCss,
 					customSiteTitle: 'n8n Public API UI',
 					customfavIcon: `${n8nPath}favicon.ico`,
 				}),

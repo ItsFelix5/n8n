@@ -128,6 +128,8 @@ paths:
     $ref: './handlers/discover/spec/paths/discover.yml'
   /insights/summary:
     $ref: './handlers/insights/spec/paths/insights.yml'
+  /webhook/{path}:
+    $ref: './handlers/webhook/spec/paths/webhook.yml'
 components:
   schemas:
     $ref: './shared/spec/schemas/_index.yml'
