@@ -11,22 +11,29 @@ const xssCheck = (value: string) =>
 const URL_REGEX = /^(https?:\/\/|www\.)|(\.[\p{L}\d-]+)/iu;
 const urlCheck = (value: string) => !URL_REGEX.test(value);
 
-const nameSchema = () =>
-	z
+export class UserUpdateRequestDto extends Z.class({
+	email: z.string(),
+	firstName: z
 		.string()
+		.max(32)
 		.min(1)
+		.refine(xssCheck, {
+			message: 'Potentially malicious string',
+		})
+		.refine(urlCheck, {
+			message: 'Potentially malicious string',
+		})
+		.optional(),
+	lastName: z
+		.string()
 		.max(32)
 		.refine(xssCheck, {
 			message: 'Potentially malicious string',
 		})
 		.refine(urlCheck, {
 			message: 'Potentially malicious string',
-		});
-
-export class UserUpdateRequestDto extends Z.class({
-	email: z.string().email(),
-	firstName: nameSchema().optional(),
-	lastName: nameSchema().optional(),
+		})
+		.optional(),
 	mfaCode: z.string().optional(),
 	/**
 	 * The current password is required when changing the email address and MFA is disabled.

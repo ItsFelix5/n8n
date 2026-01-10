@@ -8,7 +8,6 @@ import type { IFormInputs, ThemeOption } from '@/Interface';
 import type { IUser } from '@n8n/rest-api-client/api/users';
 import {
 	CHANGE_PASSWORD_MODAL_KEY,
-	CONFIRM_PASSWORD_MODAL_KEY,
 	MFA_DOCS_URL,
 	MFA_SETUP_MODAL_KEY,
 	PROMPT_MFA_CODE_MODAL_KEY,
@@ -22,8 +21,6 @@ import type { MfaModalEvents } from '../auth.eventBus';
 import { promptMfaCodeBus } from '../auth.eventBus';
 import type { BaseTextKey } from '@n8n/i18n';
 import { useSSOStore } from '@/features/settings/sso/sso.store';
-import type { ConfirmPasswordModalEvents } from '../auth.eventBus';
-import { confirmPasswordEventBus } from '../auth.eventBus';
 
 import {
 	N8nAvatar,
@@ -174,7 +171,6 @@ onMounted(() => {
 			properties: {
 				label: i18n.baseText('auth.lastName'),
 				maxlength: 32,
-				required: true,
 				autocomplete: 'family-name',
 				capitalize: true,
 				disabled: isExternalAuthEnabled.value,
@@ -184,13 +180,9 @@ onMounted(() => {
 			name: 'email',
 			initialValue: currentUser.value?.email,
 			properties: {
-				label: i18n.baseText('auth.email'),
-				type: 'email',
+				label: 'Slack ID',
 				required: true,
-				validationRules: [{ name: 'VALID_EMAIL' }],
-				autocomplete: 'email',
-				capitalize: true,
-				disabled: !isPersonalSecurityEnabled.value,
+				disabled: true,
 			},
 		},
 	];
@@ -223,39 +215,8 @@ async function saveUserSettings(params: UserBasicDetailsWithMfa) {
 
 async function onSubmit(data: Record<string, string | number | boolean | null | undefined>) {
 	const form = data as UserBasicDetailsForm;
-	const emailChanged = usersStore.currentUser?.email !== form.email;
 
-	if (usersStore.currentUser?.mfaEnabled && emailChanged) {
-		uiStore.openModal(PROMPT_MFA_CODE_MODAL_KEY);
-
-		promptMfaCodeBus.once('closed', async (payload: MfaModalEvents['closed']) => {
-			if (!payload) {
-				// User closed the modal without submitting the form
-				return;
-			}
-
-			await saveUserSettings({
-				...form,
-				mfaCode: payload.mfaCode,
-			});
-		});
-	} else if (emailChanged) {
-		uiStore.openModal(CONFIRM_PASSWORD_MODAL_KEY);
-		confirmPasswordEventBus.once('close', async (payload: ConfirmPasswordModalEvents['close']) => {
-			if (!payload) {
-				// User closed the modal without submitting the form
-				return;
-			}
-
-			await saveUserSettings({
-				...form,
-				currentPassword: payload.currentPassword,
-			});
-			uiStore.closeModal(CONFIRM_PASSWORD_MODAL_KEY);
-		});
-	} else {
-		await saveUserSettings(form);
-	}
+	await saveUserSettings(form);
 }
 
 async function updateUserBasicInfo(userBasicInfo: UserBasicDetailsWithMfa) {
@@ -265,7 +226,7 @@ async function updateUserBasicInfo(userBasicInfo: UserBasicDetailsWithMfa) {
 
 	await usersStore.updateUser({
 		firstName: userBasicInfo.firstName,
-		lastName: userBasicInfo.lastName,
+		lastName: userBasicInfo.lastName || '',
 		email: userBasicInfo.email,
 		mfaCode: userBasicInfo.mfaCode,
 		currentPassword: userBasicInfo.currentPassword,
