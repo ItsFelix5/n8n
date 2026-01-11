@@ -6,8 +6,6 @@ body:
       value: |
         > ⚠️ This form is for reporting bugs only.
         > ❌ Please do not use this form for general support, feature requests, or questions.
-        > 💬 For help and general inquiries, visit our [community support forum](https://community.n8n.io).
-        > ☁️ If you're experiencing issues with cloud instances not starting or license-related problems, contact [n8n support directly](mailto:help@n8n.io).
         ---
         Thank you for helping us improve n8n!
         To ensure we can address your report efficiently, please fill out all sections in English and provide as much detail as possible.
