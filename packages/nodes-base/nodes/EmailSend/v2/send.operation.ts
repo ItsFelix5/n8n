@@ -11,6 +11,7 @@ import { updateDisplayOptions } from '@utils/utilities';
 
 import { fromEmailProperty, toEmailProperty } from './descriptions';
 import { configureTransport, type EmailSendOptions } from './utils';
+import { prepareBinariesDataList } from '../../../utils/binary';
 
 const properties: INodeProperties[] = [
 	// TODO: Add choice for text as text or html  (maybe also from name)
@@ -205,11 +206,7 @@ export async function execute(this: IExecuteFunctions): Promise<INodeExecutionDa
 
 			if (options.attachments && item.binary) {
 				const attachments = [];
-				const attachmentProperties: string[] = options.attachments
-					.split(',')
-					.map((propertyName) => {
-						return propertyName.trim();
-					});
+				const attachmentProperties = prepareBinariesDataList(options.attachments);
 
 				for (const propertyName of attachmentProperties) {
 					const binaryData = this.helpers.assertBinaryData(itemIndex, propertyName);

@@ -23,10 +23,10 @@ import { MfaService } from '@/mfa/mfa.service';
 import { MeRequest } from '@/requests';
 import { PasswordUtility } from '@/services/password.utility';
 import { UserService } from '@/services/user.service';
-import { isSamlLicensedAndEnabled } from '@/sso.ee/saml/saml-helpers';
 import {
 	isLdapCurrentAuthenticationMethod,
 	isOidcCurrentAuthenticationMethod,
+	isSamlLicensedAndEnabled,
 } from '@/sso.ee/sso-helpers';
 
 @RestController('/me')
@@ -69,10 +69,7 @@ export class MeController {
 
 		const preUpdateUser = await this.userRepository.findOneByOrFail({ id: userId });
 		await this.userService.update(userId, payloadWithoutPassword);
-		const user = await this.userRepository.findOneOrFail({
-			where: { id: userId },
-			relations: ['role'],
-		});
+		const user = await this.userService.findUserWithAuthIdentities(userId);
 
 		this.logger.info('User updated successfully', { userId });
 
