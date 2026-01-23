@@ -139,19 +139,9 @@ export const userRLC: INodeProperties = {
 	displayName: 'User',
 	name: 'user',
 	type: 'resourceLocator',
-	default: { mode: 'list', value: '' },
+	default: { mode: 'id', value: '' },
 	placeholder: 'Select a user...',
 	modes: [
-		{
-			displayName: 'From List',
-			name: 'list',
-			type: 'list',
-			placeholder: 'Select a user...',
-			typeOptions: {
-				searchListMethod: 'getUsers',
-				searchable: true,
-			},
-		},
 		{
 			displayName: 'By ID',
 			name: 'id',
@@ -684,19 +674,9 @@ export const messageFields: INodeProperties[] = [
 								displayName: 'User to Send',
 								name: 'user',
 								type: 'resourceLocator',
-								default: { mode: 'list', value: '' },
+								default: { mode: 'id', value: '' },
 								placeholder: 'Select a user...',
 								modes: [
-									{
-										displayName: 'From List',
-										name: 'list',
-										type: 'list',
-										placeholder: 'Select a user...',
-										typeOptions: {
-											searchListMethod: 'getUsers',
-											searchable: true,
-										},
-									},
 									{
 										displayName: 'By ID',
 										name: 'id',
@@ -983,7 +963,7 @@ export const messageFields: INodeProperties[] = [
 		displayName: 'User',
 		name: 'user',
 		type: 'resourceLocator',
-		default: { mode: 'list', value: '' },
+		default: { mode: 'id', value: '' },
 		placeholder: 'Select a user...',
 		displayOptions: {
 			show: {
@@ -993,16 +973,6 @@ export const messageFields: INodeProperties[] = [
 			},
 		},
 		modes: [
-			{
-				displayName: 'From List',
-				name: 'list',
-				type: 'list',
-				placeholder: 'Select a user...',
-				typeOptions: {
-					searchListMethod: 'getUsers',
-					searchable: true,
-				},
-			},
 			{
 				displayName: 'By ID',
 				name: 'id',

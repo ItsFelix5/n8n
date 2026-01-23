@@ -8,7 +8,7 @@ import {
 import { Logger } from '@n8n/backend-common';
 import { WorkflowsConfig } from '@n8n/config';
 import type { WorkflowEntity, IWorkflowDb } from '@n8n/db';
-import { WorkflowRepository } from '@n8n/db';
+import { WorkflowRepository, EventRepository } from '@n8n/db';
 import { OnLeaderStepdown, OnLeaderTakeover, OnPubSubEvent, OnShutdown } from '@n8n/decorators';
 import { Service } from '@n8n/di';
 import chunk from 'lodash/chunk';
@@ -99,6 +99,7 @@ export class ActiveWorkflowManager {
 		private readonly eventService: EventService,
 		private readonly storageConfig: StorageConfig,
 		private readonly eventBus: MessageEventBus,
+		private readonly eventRepository: EventRepository,
 	) {
 		this.logger = this.logger.scoped(['workflow-activation']);
 	}
@@ -236,6 +237,37 @@ export class ActiveWorkflowManager {
 		return true;
 	}
 
+	async addEvents(workflow: Workflow) {
+		const triggers = Object.values(workflow.nodes).filter(
+			(node) => node.type === 'n8n-nodes-base.slackTrigger',
+		);
+
+		const paths: Map<string, string[]> = new Map();
+		for (const triggerNode of triggers) {
+			const path = triggerNode.credentials?.['slackApi'].id;
+			if (!path) {
+				this.logger.warn(
+					`Skipping Slack Trigger node "${triggerNode.name}" in workflow "${workflow.name}" as it has no credentials set.`,
+				);
+				continue;
+			}
+			paths.set(path, (paths.get(path) ?? []).concat(triggerNode.name));
+		}
+		for (const [path, nodes] of paths.entries()) {
+			const entity =
+				(await this.eventRepository.findOne({ where: { path } })) ??
+				this.eventRepository.create({ path, usages: {} });
+			entity.usages[workflow.id] = nodes;
+			await this.eventRepository.upsert(entity, ['path']);
+		}
+
+		this.logger.debug(`Added webhooks for workflow "${workflow.name}" (ID ${workflow.id})`, {
+			workflowId: workflow.id,
+		});
+
+		return triggers.length > 0;
+	}
+
 	/**
 	 * Remove all webhooks of a workflow from the database, and
 	 * deregister those webhooks from external services.
@@ -295,6 +327,10 @@ export class ActiveWorkflowManager {
 		await this.workflowStaticDataService.saveStaticData(workflow);
 
 		await this.webhookService.deleteWorkflowWebhooks(workflowId);
+
+		await this.eventRepository.query('UPDATE event_entity SET usages = usages::jsonb - $1', [
+			workflowId,
+		]);
 	}
 
 	/**
@@ -704,7 +740,7 @@ export class ActiveWorkflowManager {
 						additionalData,
 						'trigger',
 						activationMode,
-					);
+					) || (await this.addEvents(workflow));
 				}
 
 				if (shouldAddTriggersAndPollers) {

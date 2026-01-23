@@ -22,6 +22,7 @@ import NodeSettingsHeader from './NodeSettingsHeader.vue';
 import NodeSettingsTabs from './NodeSettingsTabs.vue';
 import NodeWebhooks from './NodeWebhooks.vue';
 import ParameterInputList from '@/features/ndv/parameters/components/ParameterInputList.vue';
+import CopyInput from '@/app/components/CopyInput.vue';
 import get from 'lodash/get';
 
 import ExperimentalEmbeddedNdvHeader from '@/features/workflows/canvas/experimental/components/ExperimentalEmbeddedNdvHeader.vue';
@@ -66,6 +67,7 @@ import { useQuickConnect } from '@/features/credentials/quickConnect/composables
 
 import { N8nBlockUi, N8nIcon, N8nNotice, N8nText } from '@n8n/design-system';
 import { useRoute } from 'vue-router';
+import { useRootStore } from '@n8n/stores/useRootStore';
 import { useSettingsStore } from '@/app/stores/settings.store';
 import { injectWorkflowDocumentStore } from '@/app/stores/workflowDocument.store';
 import { ProjectTypes } from '@/features/collaboration/projects/projects.types';
@@ -746,6 +748,13 @@ function handleSelectAction(params: INodeParameters) {
 			/>
 			<div v-show="openPanel === 'params'">
 				<NodeWebhooks :node="node" :node-type-description="nodeType" />
+				<N8nNotice v-if="node.type == 'n8n-nodes-base.slackTrigger'">
+					<CopyInput :value="useRootStore().baseUrl + 'event/' + node.credentials?.slackApi?.id" />
+					<N8nText size="small" color="text-dark">
+						Make sure to setup your slack app to receive events at this URL and subscribe to the
+						events you want to listen to.
+					</N8nText>
+				</N8nNotice>
 
 				<ParameterInputList
 					v-if="nodeValuesInitialized"

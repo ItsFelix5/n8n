@@ -166,7 +166,6 @@ onMounted(() => {
 				required: true,
 				autocomplete: 'given-name',
 				capitalize: true,
-				disabled: isManagedByEnv.value || isExternalAuthEnabled.value,
 			},
 		},
 		{
@@ -177,7 +176,6 @@ onMounted(() => {
 				maxlength: 32,
 				autocomplete: 'family-name',
 				capitalize: true,
-				disabled: isManagedByEnv.value || isExternalAuthEnabled.value,
 			},
 		},
 		{
