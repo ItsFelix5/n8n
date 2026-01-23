@@ -26,6 +26,7 @@ import { TestRun } from './test-run.ee';
 import { User } from './user';
 import { Variables } from './variables';
 import { WebhookEntity } from './webhook-entity';
+import { EventEntity } from './event-entity';
 import { WorkflowDependency } from './workflow-dependency-entity';
 import { WorkflowEntity } from './workflow-entity';
 import { WorkflowHistory } from './workflow-history';
@@ -43,6 +44,7 @@ export {
 	SourceTypeSchema,
 	type SourceType,
 	WebhookEntity,
+	EventEntity,
 	AuthIdentity,
 	CredentialsEntity,
 	Folder,
@@ -80,6 +82,7 @@ export const entities = {
 	ApiKey,
 	BinaryDataFile,
 	WebhookEntity,
+	EventEntity,
 	AuthIdentity,
 	CredentialsEntity,
 	Folder,

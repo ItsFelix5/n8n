@@ -11,8 +11,7 @@ import type {
 import { NodeOperationError, sleep } from 'n8n-workflow';
 
 import type { SendAndWaitMessageBody } from './MessageInterface';
-import { getSendAndWaitConfig } from '../../../utils/sendAndWait/utils';
-import { createUtmCampaignLink } from '../../../utils/utilities';
+import { getSendAndWaitConfig } from '../../utils/sendAndWait/utils';
 
 interface RateLimitOptions {
 	/**
@@ -277,7 +276,6 @@ export function getMessageContent(
 	this: IExecuteFunctions | ILoadOptionsFunctions,
 	i: number,
 	nodeVersion: number,
-	instanceId?: string,
 ) {
 	const includeLinkToWorkflow = this.getNodeParameter(
 		'otherOptions.includeLinkToWorkflow',
@@ -286,9 +284,7 @@ export function getMessageContent(
 	) as IDataObject;
 
 	const { id } = this.getWorkflow();
-	const automatedMessage = `_Automated with this <${this.getInstanceBaseUrl()}workflow/${id}?utm_source=n8n-internal&utm_medium=powered_by&utm_campaign=${encodeURIComponent(
-		'n8n-nodes-base.slack',
-	)}${instanceId ? '_' + instanceId : ''}|n8n workflow>_`;
+	const automatedMessage = `_Automated with this <${this.getInstanceBaseUrl()}workflow/${id}|n8n workflow>_`;
 	const messageType = this.getNodeParameter('messageType', i) as string;
 
 	let content: IDataObject = {};
@@ -448,19 +444,6 @@ export function createSendAndWaitMessageBody(context: IExecuteFunctions) {
 			},
 		],
 	};
-
-	if (config.appendAttribution) {
-		const instanceId = context.getInstanceId();
-		const attributionText = 'This message was sent automatically with ';
-		const link = createUtmCampaignLink('n8n-nodes-base.slack', instanceId);
-		body.blocks.push({
-			type: 'section',
-			text: {
-				type: 'mrkdwn',
-				text: `${attributionText} _<${link}|n8n>_`,
-			},
-		});
-	}
 
 	if (context.getNode().typeVersion > 2.2 && body.blocks?.[1]?.type === 'section') {
 		delete body.blocks[1].text.emoji;

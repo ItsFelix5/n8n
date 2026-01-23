@@ -16,8 +16,6 @@ const userScopes = [
 	'mpim:history',
 	'reactions:read',
 	'reactions:write',
-	'stars:read',
-	'stars:write',
 	'usergroups:write',
 	'usergroups:read',
 	'users.profile:read',

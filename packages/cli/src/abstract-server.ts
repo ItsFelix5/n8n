@@ -20,6 +20,7 @@ import { LiveWebhooks } from '@/webhooks/live-webhooks';
 import { TestWebhooks } from '@/webhooks/test-webhooks';
 import { WaitingForms } from '@/webhooks/waiting-forms';
 import { WaitingWebhooks } from '@/webhooks/waiting-webhooks';
+import { EventHandler } from '@/webhooks/event-handler';
 import { createWebhookHandlerFor } from '@/webhooks/webhook-request-handler';
 
 @Service()
@@ -248,6 +249,9 @@ export abstract class AbstractServer {
 			// Register a handler for test MCP servers
 			this.app.all(`/${this.endpointMcpTest}/*path`, testWebhooksRequestHandler);
 		}
+
+		const eventHandler = Container.get(EventHandler);
+		this.app.post('/event/*path', eventHandler.execute.bind(eventHandler));
 
 		// Block bots from scanning the application
 		const checkIfBot = isbot.spawn(['bot']);

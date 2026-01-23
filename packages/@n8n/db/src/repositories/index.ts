@@ -35,4 +35,5 @@ export {
 	WorkflowDependencies,
 } from './workflow-dependency.repository';
 export { WebhookRepository } from './webhook.repository';
+export { EventRepository } from './events.repository';
 export { UserRepository } from './user.repository';
