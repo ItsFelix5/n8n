@@ -722,7 +722,11 @@ function handleSelectAction(params: INodeParameters) {
 			<div v-show="openPanel === 'params'">
 				<NodeWebhooks :node="node" :node-type-description="nodeType" />
 				<N8nNotice v-if="node.type == 'n8n-nodes-base.slackTrigger'">
-					<CopyInput :value="useRootStore().baseUrl + 'event/' + node.credentials?.slackApi?.id" />
+					<CopyInput
+						:value="
+							useRootStore().webhookUrl.replace('webhook', 'event') + node.credentials?.slackApi?.id
+						"
+					/>
 					<N8nText size="small" color="text-dark">
 						Make sure to setup your slack app to receive events at this URL and subscribe to the
 						events you want to listen to.

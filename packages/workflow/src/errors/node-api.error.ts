@@ -313,7 +313,7 @@ export class NodeApiError extends NodeError {
 
 		if (STATUS_CODE_MESSAGES[this.httpCode]) {
 			this.addToMessages(this.message);
-			this.message = STATUS_CODE_MESSAGES[this.httpCode];
+			this.message = STATUS_CODE_MESSAGES[this.httpCode] + '; ' + this.messages.join('; ');
 			return;
 		}
 
