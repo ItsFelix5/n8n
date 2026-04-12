@@ -1,0 +1,9 @@
+# Whitelist approach: ignore everything, then allow only what Docker builds need
+# This reduces build context from ~900MB to just what's required
+
+# Ignore everything first
+*
+
+# === n8n main image (docker/images/n8n/Dockerfile) ===
+!compiled
+!compiled/**
