@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
     env:
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
@@ -31,7 +31,5 @@ jobs:
       - run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           docker buildx build \
-            --platform linux/arm64 \
-            --build-arg TARGETPLATFORM=linux/arm64 \
             -t ghcr.io/$OWNER/n8n:latest \
             --push .
