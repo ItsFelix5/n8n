@@ -751,7 +751,7 @@ function handleSelectAction(params: INodeParameters) {
 				<N8nNotice v-if="node.type == 'n8n-nodes-base.slackTrigger'">
 					<CopyInput
 						:value="
-							useRootStore().webhookUrl.replace('webhook', 'event') + node.credentials?.slackApi?.id
+							useRootStore().webhookUrl.replace('webhook', 'event/') + node.credentials?.slackApi?.id
 						"
 					/>
 					<N8nText size="small" color="text-dark">
