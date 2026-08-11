@@ -6,9 +6,10 @@ import type { IMenuItem } from '@n8n/design-system';
 import { useI18n } from '@n8n/i18n';
 import { VIEWS } from '../constants';
 import { useUIStore } from '../stores/ui.store';
-import { useSettingsStore } from '../stores/settings.store';
+import { useSettingsStore } from '@n8n/stores/settings.store';
 import { hasPermission } from '../utils/rbac/permissions';
 import { MIGRATION_REPORT_TARGET_VERSION } from '@n8n/api-types';
+import { useEnvFeatureFlag } from '@/features/shared/envFeatureFlag/useEnvFeatureFlag';
 
 export function useSettingsItems() {
 	const router = useRouter();
@@ -16,7 +17,8 @@ export function useSettingsItems() {
 	const uiStore = useUIStore();
 	const settingsStore = useSettingsStore();
 	const { canUserAccessRouteByName } = useUserHelpers(router);
-	const { creditsRemaining } = useAiGateway();
+	const { balance } = useAiGateway();
+	const { check: envFeatureFlagCheck } = useEnvFeatureFlag();
 
 	const settingsItems = computed<IMenuItem[]>(() => {
 		const menuItems: IMenuItem[] = [
@@ -59,22 +61,24 @@ export function useSettingsItems() {
 				label: i18n.baseText('settings.n8nConnect'),
 				position: 'top',
 				available:
-					settingsStore.isAiGatewayEnabled && canUserAccessRouteByName(VIEWS.AI_GATEWAY_SETTINGS),
+					settingsStore.isAiGatewayEnabled &&
+					!settingsStore.isAiGatewayCloudUbbEnabled &&
+					canUserAccessRouteByName(VIEWS.AI_GATEWAY_SETTINGS),
 				route: { to: { name: VIEWS.AI_GATEWAY_SETTINGS } },
 				creditsTag:
-					creditsRemaining.value !== undefined
-						? i18n.baseText('aiGateway.credentialMode.creditsShort', {
-								interpolate: { count: String(creditsRemaining.value) },
+					balance.value !== undefined
+						? i18n.baseText('aiGateway.wallet.balanceRemaining', {
+								interpolate: { balance: `$${Number(balance.value).toFixed(2)}` },
 							})
 						: undefined,
 			},
 			{
-				id: 'settings-project-roles',
+				id: 'settings-roles',
 				icon: 'user-round',
-				label: i18n.baseText('settings.projectRoles'),
+				label: i18n.baseText('settings.roles'),
 				position: 'top',
-				available: canUserAccessRouteByName(VIEWS.PROJECT_ROLES_SETTINGS),
-				route: { to: { name: VIEWS.PROJECT_ROLES_SETTINGS } },
+				available: canUserAccessRouteByName(VIEWS.ROLES_SETTINGS),
+				route: { to: { name: VIEWS.ROLES_SETTINGS } },
 				new: true,
 			},
 			{
@@ -118,6 +122,16 @@ export function useSettingsItems() {
 				route: { to: { name: VIEWS.SSO_SETTINGS } },
 			},
 			{
+				id: 'settings-encryption-keys',
+				icon: 'key-round',
+				label: i18n.baseText('settings.encryptionKeys'),
+				position: 'top',
+				available:
+					envFeatureFlagCheck.value('ENCRYPTION_KEY_ROTATION') &&
+					canUserAccessRouteByName(VIEWS.ENCRYPTION_KEYS_SETTINGS),
+				route: { to: { name: VIEWS.ENCRYPTION_KEYS_SETTINGS } },
+			},
+			{
 				id: 'settings-security',
 				icon: 'shield',
 				label: i18n.baseText('settings.security'),
@@ -152,6 +166,17 @@ export function useSettingsItems() {
 			position: 'top',
 			available: canUserAccessRouteByName(VIEWS.LOG_STREAMING_SETTINGS),
 			route: { to: { name: VIEWS.LOG_STREAMING_SETTINGS } },
+		});
+
+		menuItems.push({
+			id: 'settings-opentelemetry',
+			icon: 'telescope',
+			label: i18n.baseText('settings.opentelemetry'),
+			position: 'top',
+			available:
+				settingsStore.isModuleActive('otel') &&
+				hasPermission(['rbac'], { rbac: { scope: 'otel:manage' } }),
+			route: { to: { name: VIEWS.OPENTELEMETRY_SETTINGS } },
 		});
 
 		menuItems.push({

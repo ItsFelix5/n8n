@@ -12,6 +12,7 @@ import { updateDisplayOptions } from '@utils/utilities';
 import { fromEmailProperty, toEmailProperty } from './descriptions';
 import { configureTransport, type EmailSendOptions } from './utils';
 import { prepareBinariesDataList } from '../../../utils/binary';
+import { toMailString } from '../utils';
 
 const properties: INodeProperties[] = [
 	// TODO: Add choice for text as text or html  (maybe also from name)
@@ -117,12 +118,29 @@ const properties: INodeProperties[] = [
 		default: {},
 		options: [
 			{
+<<<<<<< HEAD
 				displayName: 'Attachments',
+=======
+				...appendAttributionOption,
+				description:
+					'Whether to include the phrase “This email was sent automatically with n8n” to the end of the email',
+			},
+			{
+				displayName: 'Attachments (Inline)',
+>>>>>>> upstream/master
 				name: 'attachments',
 				type: 'string',
 				default: '',
 				description:
-					'Name of the binary properties that contain data to add to email as attachment. Multiple ones can be comma-separated. Reference embedded images or other content within the body of an email message, e.g. &lt;img src="cid:image_1"&gt;',
+					'Binary properties to embed in the email body. Multiple ones can be comma-separated. Reference them in HTML via <code>cid:propertyName</code>, e.g. &lt;img src="cid:image_1"&gt;. Use \'Attachments (File)\' for regular file attachments.',
+			},
+			{
+				displayName: 'Attachments (File)',
+				name: 'fileAttachments',
+				type: 'string',
+				default: '',
+				description:
+					"Binary properties to attach to the email as regular files. Multiple ones can be comma-separated. They appear in the recipient's attachments list and are not embedded in the body.",
 			},
 			{
 				displayName: 'CC Email',
@@ -179,42 +197,87 @@ export async function execute(this: IExecuteFunctions): Promise<INodeExecutionDa
 		try {
 			item = items[itemIndex];
 
-			const fromEmail = this.getNodeParameter('fromEmail', itemIndex) as string;
-			const toEmail = this.getNodeParameter('toEmail', itemIndex) as string;
-			const subject = this.getNodeParameter('subject', itemIndex) as string;
+			const fromEmail = toMailString(this.getNodeParameter('fromEmail', itemIndex));
+			const toEmail = toMailString(this.getNodeParameter('toEmail', itemIndex));
+			const subject = toMailString(this.getNodeParameter('subject', itemIndex));
 			const emailFormat = this.getNodeParameter('emailFormat', itemIndex) as string;
 			const options = this.getNodeParameter('options', itemIndex, {}) as EmailSendOptions;
+
+			const ccEmail = toMailString(options.ccEmail);
+			const bccEmail = toMailString(options.bccEmail);
+			const replyTo = toMailString(options.replyTo);
 
 			const transporter = configureTransport(credentials, options);
 
 			const mailOptions: IDataObject = {
 				from: fromEmail,
 				to: toEmail,
-				cc: options.ccEmail,
-				bcc: options.bccEmail,
+				cc: ccEmail,
+				bcc: bccEmail,
 				subject,
-				replyTo: options.replyTo,
+				replyTo,
 			};
 
 			if (emailFormat === 'text' || emailFormat === 'both') {
-				mailOptions.text = this.getNodeParameter('text', itemIndex, '');
+				const text = toMailString(this.getNodeParameter('text', itemIndex, ''));
+				mailOptions.text = text;
 			}
 
 			if (emailFormat === 'html' || emailFormat === 'both') {
-				mailOptions.html = this.getNodeParameter('html', itemIndex, '');
+				const html = toMailString(this.getNodeParameter('html', itemIndex, ''));
+				mailOptions.html = html;
 			}
 
+<<<<<<< HEAD
 			if (options.attachments && item.binary) {
-				const attachments = [];
-				const attachmentProperties = prepareBinariesDataList(options.attachments);
+=======
+			let appendAttribution = options.appendAttribution;
+			if (appendAttribution === undefined) {
+				appendAttribution = nodeVersion >= 2.1;
+			}
 
-				for (const propertyName of attachmentProperties) {
-					const binaryData = this.helpers.assertBinaryData(itemIndex, propertyName);
-					attachments.push({
-						filename: binaryData.fileName || 'unknown',
-						content: await this.helpers.getBinaryDataBuffer(itemIndex, propertyName),
-						cid: propertyName,
-					});
+			if (appendAttribution) {
+				const attributionText = 'This email was sent automatically with ';
+				const link = createUtmCampaignLink('n8n-nodes-base.emailSend', instanceId);
+				if (emailFormat === 'html' || (emailFormat === 'both' && mailOptions.html)) {
+					mailOptions.html = `
+					${mailOptions.html}
+					<br>
+					<br>
+					---
+					<br>
+					<em>${attributionText}<a href="${link}" target="_blank">n8n</a></em>
+					`;
+				} else {
+					mailOptions.text = `${mailOptions.text}\n\n---\n${attributionText}n8n\n${'https://n8n.io'}`;
+				}
+			}
+
+			if ((options.attachments || options.fileAttachments) && item.binary) {
+>>>>>>> upstream/master
+				const attachments = [];
+
+				if (options.attachments) {
+					const inlineProperties = prepareBinariesDataList(options.attachments);
+					for (const propertyName of inlineProperties) {
+						const binaryData = this.helpers.assertBinaryData(itemIndex, propertyName);
+						attachments.push({
+							filename: binaryData.fileName || 'unknown',
+							content: await this.helpers.getBinaryDataBuffer(itemIndex, propertyName),
+							cid: propertyName,
+						});
+					}
+				}
+
+				if (options.fileAttachments) {
+					const fileProperties = prepareBinariesDataList(options.fileAttachments);
+					for (const propertyName of fileProperties) {
+						const binaryData = this.helpers.assertBinaryData(itemIndex, propertyName);
+						attachments.push({
+							filename: binaryData.fileName || 'unknown',
+							content: await this.helpers.getBinaryDataBuffer(itemIndex, propertyName),
+						});
+					}
 				}
 
 				if (attachments.length) {

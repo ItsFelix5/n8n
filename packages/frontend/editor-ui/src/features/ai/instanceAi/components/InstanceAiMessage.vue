@@ -1,13 +1,22 @@
 <script lang="ts" setup>
 import type { InstanceAiMessage } from '@n8n/api-types';
 import type { RatingFeedback } from '@n8n/design-system';
-import { N8nCallout, N8nIcon, N8nIconButton, N8nMessageRating, N8nText } from '@n8n/design-system';
+import {
+	N8nButton,
+	N8nCallout,
+	N8nChatMessage,
+	N8nIcon,
+	N8nIconButton,
+	N8nMessageRating,
+	N8nText,
+} from '@n8n/design-system';
 import { useI18n } from '@n8n/i18n';
 import { computed, ref } from 'vue';
-import { useInstanceAiStore } from '../instanceAi.store';
+import { useSettingsStore } from '@n8n/stores/settings.store';
+import { usePageRedirectionHelper } from '@/app/composables/usePageRedirectionHelper';
+import { useInstanceAiStore, useThread } from '../instanceAi.store';
 import AgentActivityTree from './AgentActivityTree.vue';
 import AttachmentPreview from './AttachmentPreview.vue';
-import ButtonLike from './ButtonLike.vue';
 import InstanceAiMarkdown from './InstanceAiMarkdown.vue';
 
 const props = defineProps<{
@@ -16,6 +25,8 @@ const props = defineProps<{
 
 const i18n = useI18n();
 const store = useInstanceAiStore();
+const settingsStore = useSettingsStore();
+const thread = useThread();
 const showDebugInfo = ref(false);
 
 const isUser = computed(() => props.message.role === 'user');
@@ -36,6 +47,36 @@ const errorDetails = computed(() => {
 
 const hasProviderError = computed(() => !!errorDetails.value?.provider);
 
+/** The run failed because the user ran out of AI credits — show a tailored state. */
+const isQuotaExhausted = computed(() => errorDetails.value?.code === 'quota_exhausted');
+
+/**
+ * The activation-capped trial cohort is never shown a credit balance, so telling them they've
+ * "run out of AI credits" would be the first they'd hear of any credits at all.
+ */
+const outOfCreditsTitleKey = computed(() =>
+	settingsStore.moduleSettings?.['instance-ai']?.activationCapped
+		? 'instanceAi.error.outOfCredits.trialTitle'
+		: 'instanceAi.error.outOfCredits.title',
+);
+
+const { goToUpgrade } = usePageRedirectionHelper();
+
+/** A run the user (or a timeout/shutdown) stopped before it completed. */
+const runCancelled = computed(() => props.message.agentTree?.status === 'cancelled');
+
+/** Attribute the stop to its cause; falls back to the generic label when unknown. */
+const cancelledLabel = computed(() => {
+	switch (props.message.agentTree?.cancellationReason) {
+		case 'user':
+			return i18n.baseText('instanceAi.agentTree.stoppedByUser');
+		case 'timeout':
+			return i18n.baseText('instanceAi.agentTree.timedOut');
+		default:
+			return i18n.baseText('instanceAi.agentTree.cancelled');
+	}
+});
+
 const errorTitle = computed(() => {
 	if (hasProviderError.value) {
 		return `${errorDetails.value!.provider} ${i18n.baseText('instanceAi.agentTree.error')}`;
@@ -53,21 +94,18 @@ const formattedTechnicalDetails = computed(() => {
 	}
 });
 
-const attachments = computed(() => props.message.attachments ?? []);
+const attachments = computed(() =>
+	(props.message.attachments ?? []).map((attachment) => {
+		if (attachment.type !== 'agent') return attachment;
+		const name = thread.producedArtifacts.get(attachment.id)?.name;
+		return name && name !== attachment.name ? { ...attachment, name } : attachment;
+	}),
+);
 
 /** Transient status message from the backend (e.g. "Recalling conversation..."). */
 const statusMessage = computed(() => {
 	if (!isStreaming.value || !props.message.agentTree) return '';
 	return props.message.agentTree.statusMessage ?? '';
-});
-
-/**
- * Background task indicator: shows when the orchestrator run has finished
- * but child agents (e.g., workflow builder) are still working in the background.
- */
-const hasActiveBackgroundTasks = computed(() => {
-	if (!props.message.agentTree || props.message.isStreaming) return false;
-	return props.message.agentTree.children.some((c) => c.status === 'active');
 });
 
 // --- Feedback ---
@@ -76,16 +114,16 @@ const responseId = computed(() => props.message.messageGroupId ?? props.message.
 const isRateable = computed(
 	() =>
 		!isUser.value &&
-		store.rateableResponseId === responseId.value &&
-		!(responseId.value in store.feedbackByResponseId),
+		thread.rateableResponseId === responseId.value &&
+		!(responseId.value in thread.feedbackByResponseId),
 );
 
 const hasSubmittedFeedback = computed(
-	() => !isUser.value && responseId.value in store.feedbackByResponseId,
+	() => !isUser.value && responseId.value in thread.feedbackByResponseId,
 );
 
 function onFeedback(payload: RatingFeedback) {
-	store.submitFeedback(responseId.value, payload);
+	thread.submitFeedback(responseId.value, payload);
 }
 
 function formatJson(value: unknown): string {
@@ -98,9 +136,12 @@ function formatJson(value: unknown): string {
 </script>
 
 <template>
-	<div :class="[isUser ? $style.userMessage : '']">
+	<N8nChatMessage
+		:role="props.message.role"
+		:data-test-id="isUser ? 'instance-ai-user-message' : 'instance-ai-assistant-message'"
+	>
 		<!-- User message -->
-		<div v-if="isUser" :class="$style.userBubble" data-test-id="instance-ai-user-message">
+		<div v-if="isUser">
 			<div v-if="attachments.length > 0" :class="$style.userAttachments">
 				<AttachmentPreview
 					v-for="(attachment, index) in attachments"
@@ -113,16 +154,27 @@ function formatJson(value: unknown): string {
 		</div>
 
 		<!-- Assistant message -->
-		<div v-else :class="$style.assistantWrapper" data-test-id="instance-ai-assistant-message">
+		<template v-else>
 			<!-- Agent activity tree (handles reasoning, tool calls, sub-agents) -->
-			<AgentActivityTree
-				v-if="props.message.agentTree"
-				:agent-node="props.message.agentTree"
-				:is-root="true"
-			/>
+			<AgentActivityTree v-if="props.message.agentTree" :agent-node="props.message.agentTree" />
+
+			<!-- Out-of-credits (quota exhausted): tailored state, hides raw provider/status noise -->
+			<N8nCallout v-if="isQuotaExhausted" theme="warning" data-test-id="instance-ai-out-of-credits">
+				{{ i18n.baseText(outOfCreditsTitleKey) }}
+				<template #trailingContent>
+					<N8nButton
+						variant="outline"
+						size="xsmall"
+						data-test-id="instance-ai-out-of-credits-upgrade"
+						@click="goToUpgrade('instance-ai', 'upgrade-instance-ai')"
+					>
+						{{ i18n.baseText('instanceAi.error.outOfCredits.upgrade') }}
+					</N8nButton>
+				</template>
+			</N8nCallout>
 
 			<!-- Run-level error -->
-			<N8nCallout v-if="runError" theme="danger">
+			<N8nCallout v-else-if="runError" theme="danger">
 				<div :class="$style.runLevelError">
 					<N8nText bold tag="div">{{ errorTitle }}</N8nText>
 					<N8nText v-if="hasProviderError" tag="div">{{ runError }}</N8nText>
@@ -156,11 +208,15 @@ function formatJson(value: unknown): string {
 				:class="$style.blinkingCursor"
 			/>
 
-			<!-- Background task indicator (run finished but sub-agents still working) -->
-			<ButtonLike v-if="hasActiveBackgroundTasks">
-				<N8nIcon icon="spinner" color="primary" spin size="small" />
-				{{ i18n.baseText('instanceAi.backgroundTask.running') }}
-			</ButtonLike>
+			<!-- Run stopped indicator (survives reload via the persisted cancelled status) -->
+			<div
+				v-if="runCancelled"
+				:class="$style.cancelledIndicator"
+				data-test-id="instance-ai-run-cancelled"
+			>
+				<N8nIcon icon="circle-x" size="small" />
+				<span>{{ cancelledLabel }}</span>
+			</div>
 
 			<!-- Response feedback -->
 			<N8nMessageRating
@@ -177,62 +233,28 @@ function formatJson(value: unknown): string {
 				{{ i18n.baseText('instanceAi.feedback.success') }}
 			</p>
 
+			<pre v-if="showDebugInfo" :class="$style.debugJson">{{ formatJson(props.message) }}</pre>
+		</template>
+
+		<template v-if="store.debugMode && !isUser" #actions>
 			<N8nIconButton
-				v-if="store.debugMode && !isUser"
 				icon="code"
 				variant="ghost"
 				size="xsmall"
-				:class="$style.actionBtn"
 				@click="showDebugInfo = !showDebugInfo"
 			/>
-			<pre v-if="showDebugInfo" :class="$style.debugJson">{{ formatJson(props.message) }}</pre>
-		</div>
-	</div>
+		</template>
+	</N8nChatMessage>
 </template>
 
 <style lang="scss" module>
-.userMessage {
-	align-self: flex-end;
-	display: flex;
-	justify-content: flex-end;
-}
+@use '@n8n/design-system/css/mixins/motion';
 
 .userAttachments {
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--spacing--2xs);
 	margin-bottom: var(--spacing--2xs);
-}
-
-.userBubble {
-	background: var(--color--background);
-	padding: var(--spacing--xs) var(--spacing--sm);
-	border-radius: var(--radius--xl);
-	white-space: pre-wrap;
-	word-break: break-word;
-}
-
-.assistantWrapper {
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing--xs);
-
-	&:hover .actionBtn {
-		opacity: 1;
-	}
-}
-
-.actionBtn {
-	opacity: 0;
-	transition: opacity 0.15s ease;
-	position: absolute;
-	top: 0;
-	right: 0;
-
-	@media (hover: none) {
-		opacity: 1;
-	}
 }
 
 .statusIndicator {
@@ -245,12 +267,23 @@ function formatJson(value: unknown): string {
 	animation: status-fade-in 0.2s ease;
 }
 
+.cancelledIndicator {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing--3xs);
+	font-size: var(--font-size--2xs);
+	color: var(--color--text--tint-1);
+}
+
 .statusDot {
+	--animation--opacity-pulse--duration: 1.5s;
+	--animation--opacity-pulse--opacity-end: 0.3;
+
 	width: 6px;
 	height: 6px;
 	border-radius: 50%;
 	background: var(--color--primary);
-	animation: pulse 1.5s ease-in-out infinite;
+	@include motion.opacity-pulse;
 }
 
 @keyframes status-fade-in {
@@ -259,16 +292,6 @@ function formatJson(value: unknown): string {
 	}
 	to {
 		opacity: 1;
-	}
-}
-
-@keyframes pulse {
-	0%,
-	100% {
-		opacity: 1;
-	}
-	50% {
-		opacity: 0.3;
 	}
 }
 

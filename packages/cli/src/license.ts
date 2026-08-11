@@ -18,26 +18,34 @@ type LicenseRefreshCallback = (cert: string) => void;
 
 @Service()
 export class License implements LicenseProvider {
-	async init(_arg: { forceRecreate?: boolean; isCli?: boolean } = {}) {}
+	async init(_arg: { forceRecreate?: boolean; isCli?: boolean } = {}) { }
 
 	async loadCertStr(): Promise<string> {
 		return '';
 	}
 
-	async saveCertStr(_value: string): Promise<void> {}
+	async saveCertStr(_value: string): Promise<void> { }
 
 	onCertRefresh(_refreshCallback: LicenseRefreshCallback): () => void {
-		return () => {};
+		return () => { };
 	}
 
-	async activate(activationKey: string, eulaUri?: string, userEmail?: string): Promise<void> {}
+	async activate(activationKey: string, eulaUri?: string, userEmail?: string): Promise<void> { }
 
-	async renew() {}
-	async reload() {}
-	async clear() {}
+	async renew() { }
+	async reload() { }
+	async clear() { }
 
 	isLicensed(feature: BooleanLicenseFeature) {
 		return this.getValue(feature) === true;
+	}
+
+	isCertValid(): boolean {
+		return this.manager?.isValid(false /* useLogger */) ?? false;
+	}
+
+	hasFeatureInCert(feature: BooleanLicenseFeature): boolean {
+		return this.manager?.hasFeatureEnabled(feature, false) ?? false;
 	}
 
 	/** @deprecated Use `LicenseState.isDynamicCredentialsLicensed` instead. */

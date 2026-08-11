@@ -8,16 +8,25 @@ import AiGatewaySelector from './AiGatewaySelector.vue';
 import { createComponentRenderer } from '@/__tests__/render';
 import { mockedStore } from '@/__tests__/utils';
 import { useWorkflowsStore } from '@/app/stores/workflows.store';
+import { useWorkflowExecutionStateStore } from '@/app/stores/workflowExecutionState.store';
+import { createWorkflowDocumentId } from '@/app/stores/workflowDocument.store';
 import { useUIStore } from '@/app/stores/ui.store';
 import { AI_GATEWAY_TOP_UP_MODAL_KEY } from '@/app/constants';
 
-const mockFetchCredits = vi.fn().mockResolvedValue(undefined);
-const mockCreditsRemaining = ref<number | undefined>(undefined);
+const mockFetchBalance = vi.fn().mockResolvedValue(undefined);
+const mockBalance = ref<number | undefined>(undefined);
+const n8nCreditsCredentialSelectionEnabled = vi.hoisted(() => ({ value: false }));
 
 vi.mock('@/app/composables/useAiGateway', () => ({
 	useAiGateway: vi.fn(() => ({
-		creditsRemaining: computed(() => mockCreditsRemaining.value),
-		fetchCredits: mockFetchCredits,
+		balance: computed(() => mockBalance.value),
+		fetchWallet: mockFetchBalance,
+	})),
+}));
+
+vi.mock('@/experiments/n8nCreditsCredentialSelection', () => ({
+	useN8nCreditsCredentialSelectionExperiment: vi.fn(() => ({
+		isFeatureEnabled: n8nCreditsCredentialSelectionEnabled,
 	})),
 }));
 
@@ -37,11 +46,14 @@ describe('AiGatewaySelector', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockCreditsRemaining.value = undefined;
+		mockBalance.value = undefined;
+		n8nCreditsCredentialSelectionEnabled.value = false;
 		const pinia = createTestingPinia({ stubActions: false });
 		setActivePinia(pinia);
 		workflowsStore = mockedStore(useWorkflowsStore);
-		workflowsStore.workflowExecutionData = null;
+		useWorkflowExecutionStateStore(
+			createWorkflowDocumentId(workflowsStore.workflowId),
+		).setWorkflowExecutionData(null);
 	});
 
 	describe('rendering', () => {
@@ -51,29 +63,61 @@ describe('AiGatewaySelector', () => {
 			expect(screen.getByTestId('ai-gateway-selector')).toBeInTheDocument();
 			expect(screen.getByTestId('ai-gateway-selector-connect')).toBeInTheDocument();
 			expect(screen.getByTestId('ai-gateway-mode-card-own')).toBeInTheDocument();
-			expect(screen.getByText('n8n Connect')).toBeInTheDocument();
+			expect(screen.getByText('n8n credits')).toBeInTheDocument();
 			expect(screen.getByText('My own credential')).toBeInTheDocument();
 		});
 
-		it('should show credits badge when aiGatewayEnabled and creditsRemaining is defined', () => {
-			mockCreditsRemaining.value = 5;
-			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
-
-			expect(screen.getByText('5 credits')).toBeInTheDocument();
-		});
-
-		it('should not show credits badge when creditsRemaining is undefined', () => {
-			mockCreditsRemaining.value = undefined;
-			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
-
-			expect(screen.queryByText(/\d+ credits$/)).not.toBeInTheDocument();
-		});
-
-		it('should not show credits badge when aiGatewayEnabled is false', () => {
-			mockCreditsRemaining.value = 5;
+		it('should render n8n credits first by default', () => {
 			renderComponent({ props: { aiGatewayEnabled: false, readonly: false } });
 
-			expect(screen.queryByText(/\d+ credits$/)).not.toBeInTheDocument();
+			const cards = screen.getAllByRole('radio');
+			expect(cards[0]).toHaveTextContent('n8n credits');
+			expect(cards[1]).toHaveTextContent('My own credential');
+		});
+
+		it('should render own credential first when enabled', () => {
+			n8nCreditsCredentialSelectionEnabled.value = true;
+			renderComponent({ props: { aiGatewayEnabled: false, readonly: false } });
+
+			const cards = screen.getAllByRole('radio');
+			expect(cards[0]).toHaveTextContent('My own credential');
+			expect(cards[1]).toHaveTextContent('n8n credits');
+		});
+
+		it('should show balance badge when aiGatewayEnabled and balance is defined', () => {
+			mockBalance.value = 5;
+			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
+
+			expect(screen.getByText('$5.00 remaining')).toBeInTheDocument();
+		});
+
+		it('should not show balance badge when balance is undefined', () => {
+			mockBalance.value = undefined;
+			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
+
+			expect(screen.queryByText(/\$[\d.]+/)).not.toBeInTheDocument();
+		});
+
+		it('should not show balance badge when aiGatewayEnabled is false', () => {
+			mockBalance.value = 5;
+			renderComponent({ props: { aiGatewayEnabled: false, readonly: false } });
+
+			expect(screen.queryByText(/\$[\d.]+/)).not.toBeInTheDocument();
+		});
+
+		it('should show "No credits" badge when balance is 0', () => {
+			mockBalance.value = 0;
+			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
+
+			expect(screen.getByText('No credits')).toBeInTheDocument();
+			expect(screen.queryByText(/\$[\d.]+/)).not.toBeInTheDocument();
+		});
+
+		it('should show "No credits" badge when balance is negative', () => {
+			mockBalance.value = -1;
+			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
+
+			expect(screen.getByText('No credits')).toBeInTheDocument();
 		});
 
 		it('should disable both cards in readonly mode', () => {
@@ -85,7 +129,7 @@ describe('AiGatewaySelector', () => {
 	});
 
 	describe('selection', () => {
-		it('should emit select with true when n8n Connect card is clicked while disabled', async () => {
+		it('should emit select with true when n8n credits card is clicked while disabled', async () => {
 			const { emitted } = renderComponent({
 				props: { aiGatewayEnabled: false, readonly: false },
 			});
@@ -107,7 +151,7 @@ describe('AiGatewaySelector', () => {
 			expect(emitted('toggle')![0]).toEqual([false]);
 		});
 
-		it('should not emit when n8n Connect card is clicked while already selected', async () => {
+		it('should not emit when n8n credits card is clicked while already selected', async () => {
 			const { emitted } = renderComponent({
 				props: { aiGatewayEnabled: true, readonly: false },
 			});
@@ -128,79 +172,99 @@ describe('AiGatewaySelector', () => {
 		});
 	});
 
-	describe('fetchCredits — mount watch (immediate)', () => {
-		it('should call fetchCredits immediately when enabled on mount', () => {
+	describe('fetchWallet — mount watch (immediate)', () => {
+		it('should call fetchWallet immediately when enabled on mount', () => {
 			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
 
-			expect(mockFetchCredits).toHaveBeenCalledOnce();
+			expect(mockFetchBalance).toHaveBeenCalledOnce();
 		});
 
-		it('should not call fetchCredits on mount when disabled', () => {
+		it('should not call fetchWallet on mount when disabled', () => {
 			renderComponent({ props: { aiGatewayEnabled: false, readonly: false } });
 
-			expect(mockFetchCredits).not.toHaveBeenCalled();
+			expect(mockFetchBalance).not.toHaveBeenCalled();
 		});
 	});
 
-	describe('fetchCredits — execution finish watch', () => {
-		it('should call fetchCredits when execution data has finished:true (saved run)', async () => {
+	describe('fetchWallet — execution finish watch', () => {
+		it('should call fetchWallet when execution data has finished:true (saved run)', async () => {
 			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
-			mockFetchCredits.mockClear();
+			mockFetchBalance.mockClear();
 
-			workflowsStore.workflowExecutionData = { finished: true } as never;
+			useWorkflowExecutionStateStore(
+				createWorkflowDocumentId(workflowsStore.workflowId),
+			).setWorkflowExecutionData({ id: 'exec-1', finished: true } as never);
 
-			await vi.waitFor(() => expect(mockFetchCredits).toHaveBeenCalledOnce());
+			await vi.waitFor(() => expect(mockFetchBalance).toHaveBeenCalledOnce());
 		});
 
-		it('should call fetchCredits when execution data has stoppedAt set (step/test run)', async () => {
+		it('should call fetchWallet when execution data has stoppedAt set (step/test run)', async () => {
 			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
-			mockFetchCredits.mockClear();
+			mockFetchBalance.mockClear();
 
-			workflowsStore.workflowExecutionData = { finished: false, stoppedAt: new Date() } as never;
+			useWorkflowExecutionStateStore(
+				createWorkflowDocumentId(workflowsStore.workflowId),
+			).setWorkflowExecutionData({
+				id: 'exec-1',
+				finished: false,
+				stoppedAt: new Date(),
+			} as never);
 
-			await vi.waitFor(() => expect(mockFetchCredits).toHaveBeenCalledOnce());
+			await vi.waitFor(() => expect(mockFetchBalance).toHaveBeenCalledOnce());
 		});
 
-		it('should not call fetchCredits when execution is still in progress', async () => {
+		it('should not call fetchWallet when execution is still in progress', async () => {
 			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
-			mockFetchCredits.mockClear();
+			mockFetchBalance.mockClear();
 
-			workflowsStore.workflowExecutionData = { finished: false, stoppedAt: undefined } as never;
+			useWorkflowExecutionStateStore(
+				createWorkflowDocumentId(workflowsStore.workflowId),
+			).setWorkflowExecutionData({
+				id: 'exec-1',
+				finished: false,
+				stoppedAt: undefined,
+			} as never);
 
 			await new Promise((r) => setTimeout(r, 10));
-			expect(mockFetchCredits).not.toHaveBeenCalled();
+			expect(mockFetchBalance).not.toHaveBeenCalled();
 		});
 
-		it('should call fetchCredits again on consecutive executions', async () => {
+		it('should call fetchWallet again on consecutive executions', async () => {
 			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
-			mockFetchCredits.mockClear();
+			mockFetchBalance.mockClear();
 
-			workflowsStore.workflowExecutionData = { finished: true } as never;
-			await vi.waitFor(() => expect(mockFetchCredits).toHaveBeenCalledTimes(1));
+			useWorkflowExecutionStateStore(
+				createWorkflowDocumentId(workflowsStore.workflowId),
+			).setWorkflowExecutionData({ id: 'exec-1', finished: true } as never);
+			await vi.waitFor(() => expect(mockFetchBalance).toHaveBeenCalledTimes(1));
 
-			workflowsStore.workflowExecutionData = { finished: true } as never;
-			await vi.waitFor(() => expect(mockFetchCredits).toHaveBeenCalledTimes(2));
+			useWorkflowExecutionStateStore(
+				createWorkflowDocumentId(workflowsStore.workflowId),
+			).setWorkflowExecutionData({ id: 'exec-2', finished: true } as never);
+			await vi.waitFor(() => expect(mockFetchBalance).toHaveBeenCalledTimes(2));
 		});
 
-		it('should not call fetchCredits when execution finishes but gateway is disabled', async () => {
+		it('should not call fetchWallet when execution finishes but gateway is disabled', async () => {
 			renderComponent({ props: { aiGatewayEnabled: false, readonly: false } });
 
-			workflowsStore.workflowExecutionData = { finished: true } as never;
+			useWorkflowExecutionStateStore(
+				createWorkflowDocumentId(workflowsStore.workflowId),
+			).setWorkflowExecutionData({ id: 'exec-1', finished: true } as never);
 
 			await new Promise((r) => setTimeout(r, 10));
-			expect(mockFetchCredits).not.toHaveBeenCalled();
+			expect(mockFetchBalance).not.toHaveBeenCalled();
 		});
 	});
 
 	describe('top-up badge', () => {
 		it('opens top-up modal when badge is clicked', async () => {
-			mockCreditsRemaining.value = 5;
+			mockBalance.value = 5;
 			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
 
 			const uiStore = useUIStore();
 			vi.spyOn(uiStore, 'openModalWithData');
 
-			await userEvent.click(screen.getByText('5 credits'));
+			await userEvent.click(screen.getByText('$5.00 remaining'));
 
 			expect(uiStore.openModalWithData).toHaveBeenCalledWith({
 				name: AI_GATEWAY_TOP_UP_MODAL_KEY,
@@ -208,11 +272,33 @@ describe('AiGatewaySelector', () => {
 			});
 		});
 
-		it('renders "Top up" label alongside the credits label in the badge', () => {
-			mockCreditsRemaining.value = 5;
+		it('renders "Top up" label alongside the balance label in the badge', () => {
+			mockBalance.value = 5;
 			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
 
 			expect(screen.getByText('Top up')).toBeInTheDocument();
+		});
+
+		it('renders "Top up" label when balance is depleted', () => {
+			mockBalance.value = 0;
+			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
+
+			expect(screen.getByText('Top up')).toBeInTheDocument();
+		});
+
+		it('opens top-up modal when "No credits" badge is clicked', async () => {
+			mockBalance.value = 0;
+			renderComponent({ props: { aiGatewayEnabled: true, readonly: false } });
+
+			const uiStore = useUIStore();
+			vi.spyOn(uiStore, 'openModalWithData');
+
+			await userEvent.click(screen.getByText('No credits'));
+
+			expect(uiStore.openModalWithData).toHaveBeenCalledWith({
+				name: AI_GATEWAY_TOP_UP_MODAL_KEY,
+				data: { credentialType: undefined },
+			});
 		});
 	});
 });

@@ -1,6 +1,3 @@
-import { createHash, createPublicKey } from 'node:crypto';
-import type { KeyObject } from 'node:crypto';
-
 import { Logger } from '@n8n/backend-common';
 import { Time } from '@n8n/constants';
 import { DbLock, DbLockService } from '@n8n/db';
@@ -10,6 +7,8 @@ import type { EntityManager } from '@n8n/typeorm';
 import { In, Not } from '@n8n/typeorm';
 import { InstanceSettings } from 'n8n-core';
 import { UnexpectedError, jsonParse } from 'n8n-workflow';
+import type { KeyObject } from 'node:crypto';
+import { createHash, createPublicKey } from 'node:crypto';
 import { z } from 'zod';
 
 import { TrustedKeySourceEntity } from '../database/entities/trusted-key-source.entity';
@@ -51,13 +50,18 @@ const REFRESH_POLL_INTERVAL_MS = 30 * Time.seconds.toMilliseconds;
 /**
  * Manages trusted public keys for JWT signature verification.
  *
- * The leader resolves all configured key sources (env-var static keys,
- * future JWKS endpoints) and writes them to the database on startup and
- * on a periodic refresh interval. All instances read keys from the
- * database on every lookup, ensuring multi-instance consistency.
+ * Every instance resolves all configured key sources (env-var static keys,
+ * JWKS endpoints) and writes them to the database at startup. Concurrent
+ * writers are serialized by a distributed advisory lock, and the env-backed
+ * source config is identical across mains, so the sync is idempotent. Only
+ * the leader runs the periodic refresh poller thereafter. This ensures that
+ * any main which begins serving traffic after `initialize()` resolves has
+ * keys available in the database, avoiding a multi-main startup race where
+ * a follower could previously verify against an empty table.
  *
- * A local crypto-primitive cache avoids repeated `createPublicKey()`
- * calls when the underlying key material has not changed.
+ * All instances read keys from the database on every lookup, so multi-instance
+ * consistency is preserved. A local crypto-primitive cache avoids repeated
+ * `createPublicKey()` calls when the underlying key material has not changed.
  */
 @Service()
 export class TrustedKeyService {
@@ -87,26 +91,33 @@ export class TrustedKeyService {
 	// ─── Public lifecycle ──────────────────────────────────────────────
 
 	/**
-	 * Leader: parse config → sync sources to DB → refresh all → start interval.
-	 * Worker: no-op (reads from DB on demand via `getByKidAndIss`).
+	 * All instances: parse config → sync sources to DB → refresh all.
+	 * Leader additionally starts the periodic refresh interval.
+	 *
+	 * Running the sync on every main (rather than leader-only) closes a
+	 * multi-main startup race where a follower could begin handling token
+	 * verification before the leader had populated the DB. The distributed
+	 * lock in `syncSourcesToDb` / `refreshSourceInternal` serializes
+	 * concurrent writers, and the env-backed source config is identical on
+	 * every main, so repeated writes are idempotent.
 	 */
 	async initialize(): Promise<void> {
-		if (!this.instanceSettings.isLeader) {
-			this.logger.debug('Worker instance — skipping trusted key initialization');
-			return;
-		}
+		const sources = this.parseConfigSources();
+		await this.syncSourcesToDb(sources);
+		await this.refreshAllSources();
 
-		await this.initializeAsLeader();
+		if (this.instanceSettings.isLeader) {
+			this.startRefresh();
+		} else {
+			this.logger.debug('Follower instance — skipping periodic refresh loop');
+		}
 	}
 
 	@OnLeaderTakeover()
 	async onLeaderTakeover() {
-		await this.initializeAsLeader();
-	}
-
-	private async initializeAsLeader(): Promise<void> {
-		const sources = this.parseConfigSources();
-		await this.syncSourcesToDb(sources);
+		// A former follower has been elected leader: refresh from sources in
+		// case keys rotated while no poller was running, then start the
+		// periodic refresh loop. `startRefresh` is idempotent.
 		await this.refreshAllSources();
 		this.startRefresh();
 	}
@@ -181,6 +192,7 @@ export class TrustedKeyService {
 				issuer: data.issuer,
 				expectedAudience: data.expectedAudience,
 				allowedRoles: data.allowedRoles,
+				requireVerifiedEmail: data.requireVerifiedEmail ?? true,
 			};
 		}
 
@@ -235,6 +247,33 @@ export class TrustedKeyService {
 		}
 
 		return result.data;
+	}
+
+	async hasSingleTrustedIssuer(): Promise<boolean> {
+		const sources = await this.listAll();
+		const issuers = new Set<string>();
+
+		sources.forEach((entity) => {
+			try {
+				const parsed = TrustedKeyDataSchema.safeParse(JSON.parse(entity.data));
+				if (!parsed.success) {
+					this.logger.warn('Skipping corrupted trusted key entity', {
+						kid: entity.kid,
+						sourceId: entity.sourceId,
+						error: parsed.error.message,
+					});
+					return;
+				}
+				issuers.add(parsed.data.issuer);
+			} catch {
+				this.logger.warn('Skipping corrupted trusted key entity', {
+					kid: entity.kid,
+					sourceId: entity.sourceId,
+					error: 'invalid JSON',
+				});
+			}
+		});
+		return issuers.size === 1;
 	}
 
 	// ─── Private: source sync ──────────────────────────────────────────
@@ -474,6 +513,7 @@ export class TrustedKeyService {
 					issuer: key.issuer,
 					expectedAudience: key.expectedAudience,
 					allowedRoles: key.allowedRoles,
+					requireVerifiedEmail: jwksConfig.requireVerifiedEmail ?? true,
 					expiresAt: new Date(Date.now() + result.ttlSeconds * 1000).toISOString(),
 				},
 			})),
@@ -512,7 +552,15 @@ export class TrustedKeyService {
 		const seenKids = new Set<string>();
 
 		for (const config of configs) {
-			const { kid, algorithms, key: pemString, issuer, expectedAudience, allowedRoles } = config;
+			const {
+				kid,
+				algorithms,
+				key: pemString,
+				issuer,
+				expectedAudience,
+				allowedRoles,
+				requireVerifiedEmail,
+			} = config;
 
 			if (seenKids.has(kid)) {
 				throw new UnexpectedError(`Trusted key "${kid}": duplicate kid`);
@@ -529,6 +577,7 @@ export class TrustedKeyService {
 					issuer,
 					expectedAudience,
 					allowedRoles,
+					requireVerifiedEmail,
 				},
 			});
 		}

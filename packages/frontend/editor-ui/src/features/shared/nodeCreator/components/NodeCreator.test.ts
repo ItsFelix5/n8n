@@ -9,9 +9,9 @@ vi.mock('@/app/composables/useAiGateway', () => ({
 	useAiGateway: vi.fn(() => ({
 		isEnabled: { value: false },
 		fetchConfig: mockFetchConfig,
-		fetchCredits: vi.fn(),
-		creditsRemaining: { value: undefined },
-		creditsQuota: { value: undefined },
+		fetchWallet: vi.fn(),
+		balance: { value: undefined },
+		budget: { value: undefined },
 		fetchError: { value: undefined },
 		isCredentialTypeSupported: vi.fn(() => false),
 		saveAfterToggle: vi.fn(),
@@ -60,7 +60,7 @@ vi.mock('@/features/ai/assistant/chatPanel.store', () => ({
 	useChatPanelStore: vi.fn(() => ({ isOpen: false, width: 0 })),
 }));
 
-vi.mock('@/app/stores/settings.store', () => ({
+vi.mock('@n8n/stores/settings.store', () => ({
 	useSettingsStore: vi.fn(() => ({ isCanvasOnly: false })),
 }));
 

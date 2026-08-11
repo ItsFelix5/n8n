@@ -28,8 +28,19 @@ export class UserUpdateRequestDto extends Z.class({
 	lastName: z
 		.string()
 		.max(32)
+		.min(1)
 		.refine(xssCheck, {
 			message: 'Potentially malicious string',
+		})
+		.refine(urlCheck, {
+			message: 'Potentially malicious string',
+		})
+		.optional(),
+	lastName: z
+		.string()
+		.max(32)
+		.refine(xssCheck, {
+			message: 'Name can only contain letters, numbers, spaces and punctuation',
 		})
 		.refine(urlCheck, {
 			message: 'Potentially malicious string',
@@ -40,4 +51,4 @@ export class UserUpdateRequestDto extends Z.class({
 	 * The current password is required when changing the email address and MFA is disabled.
 	 */
 	currentPassword: z.string().optional(),
-}) {}
+}) { }

@@ -9,7 +9,7 @@ import {
 	testDb,
 	mockInstance,
 } from '@n8n/backend-test-utils';
-import type { PublicUser, User } from '@n8n/db';
+import type { Project, PublicUser, User } from '@n8n/db';
 import {
 	FolderRepository,
 	GLOBAL_ADMIN_ROLE,
@@ -17,6 +17,8 @@ import {
 	GLOBAL_OWNER_ROLE,
 	ProjectRelationRepository,
 	ProjectRepository,
+	RoleMappingRuleRepository,
+	RoleRepository,
 	SharedCredentialsRepository,
 	SharedWorkflowRepository,
 	UserRepository,
@@ -31,6 +33,7 @@ import { ProvisioningService } from '@/modules/provisioning.ee/provisioning.serv
 import { OwnershipService } from '@/services/ownership.service';
 import { Telemetry } from '@/telemetry';
 import { createFolder } from '@test-integration/db/folders';
+import { createRole } from '@test-integration/db/roles';
 
 import { SUCCESS_RESPONSE_BODY } from './shared/constants';
 import {
@@ -42,7 +45,6 @@ import { createAdmin, createMember, createOwner, createUser, getUserById } from 
 import type { SuperAgentTest } from './shared/types';
 import * as utils from './shared/utils/';
 import { validateUser } from './shared/utils/users';
-import { createRole } from '@test-integration/db/roles';
 
 mockInstance(Telemetry);
 mockInstance(ExecutionService);
@@ -56,6 +58,8 @@ describe('GET /users', () => {
 	let owner: User;
 	let member1: User;
 	let member2: User;
+	/** Team project where `member1` and `member2` are linked (for project-scoped listing as a member). */
+	let sharedListTeamProject: Project;
 	let ownerAgent: SuperAgentTest;
 	let memberAgent: SuperAgentTest;
 	let userRepository: UserRepository;
@@ -92,7 +96,9 @@ describe('GET /users', () => {
 			mfaEnabled: true,
 		});
 
-		for (let i = 0; i < 10; i++) {
+		sharedListTeamProject = await createTeamProject('shared-list-project', member1);
+		await linkUserToProject(member2, sharedListTeamProject, 'project:viewer');
+		for (let i = 0; i < 9; i++) {
 			await createTeamProject(`project${i}`, member1);
 		}
 
@@ -585,26 +591,20 @@ describe('GET /users', () => {
 					)
 					.expect(200);
 
-				expect(response.body).toEqual({
-					data: {
-						count: 1,
-						items: [
-							{
-								id: expect.any(String),
-								firstName: expect.any(String),
-								projectRelations: [
-									{
-										id: project.id,
-										role: 'project:admin',
-										name: project.name, // Ensure the project name is included
-									},
-								],
-							},
-						],
-					},
-				});
-
-				expect(response.body.data.items[0].projectRelations).toHaveLength(1);
+				expect(response.body.data.count).toBe(1);
+				expect(response.body.data.items).toHaveLength(1);
+				const [userWithProjects] = response.body.data.items;
+				expect(userWithProjects.firstName).toBe(member2.firstName);
+				expect(userWithProjects.projectRelations).toEqual(
+					expect.arrayContaining([
+						{
+							id: project.id,
+							role: 'project:admin',
+							name: project.name,
+							icon: null,
+						},
+					]),
+				);
 			});
 
 			test('should expand on projects and hide personal projects', async () => {
@@ -642,6 +642,7 @@ describe('GET /users', () => {
 					lastName: 'PendingLastName',
 					password: null,
 				});
+				await linkUserToProject(pendingUser, sharedListTeamProject, 'project:viewer');
 			});
 
 			afterAll(async () => {
@@ -669,7 +670,10 @@ describe('GET /users', () => {
 			});
 
 			test('should not include inviteAcceptUrl for pending users, if member requests it', async () => {
-				const response = await memberAgent.get('/users').expect(200);
+				const response = await memberAgent
+					.get('/users')
+					.query(`filter={ "projectId": "${sharedListTeamProject.id}" }`)
+					.expect(200);
 
 				const responseData = response.body.data as {
 					count: number;
@@ -824,15 +828,18 @@ describe('GET /users', () => {
 			});
 		});
 
-		describe('field restrictions based on user:create scope', () => {
-			test('should return limited fields for members without user:create scope', async () => {
-				const response = await memberAgent.get('/users').expect(200);
+		describe('field restrictions based on role', () => {
+			test('should return limited fields for members', async () => {
+				const response = await memberAgent
+					.get('/users')
+					.query(`filter={ "projectId": "${sharedListTeamProject.id}" }`)
+					.expect(200);
 
 				const users = response.body.data.items;
 
 				expect(users).toBeInstanceOf(Array);
 
-				// Fields that should be restricted for members without user:create scope
+				// Fields that should be restricted for members (non-owner, non-admin roles)
 				const restrictionsFields = [
 					'mfaEnabled',
 					'settings',
@@ -866,7 +873,7 @@ describe('GET /users', () => {
 				});
 			});
 
-			test('should return full fields for owners/admins with user:create scope', async () => {
+			test('should return full fields for owners and admins', async () => {
 				const response = await ownerAgent.get('/users').expect(200);
 
 				const users = response.body.data.items;
@@ -878,6 +885,18 @@ describe('GET /users', () => {
 				expect(userWithMfa).toHaveProperty('mfaEnabled', true);
 				expect(userWithMfa).toHaveProperty('isOwner');
 				expect(userWithMfa).toHaveProperty('signInType');
+			});
+
+			test('should return 404 when a member lists users for a project they are not in', async () => {
+				const memberOnlyProject = await createTeamProject('member-inaccessible-project', owner);
+
+				const response = await testServer
+					.authAgentFor(member2)
+					.get('/users')
+					.query(`filter={ "projectId": "${memberOnlyProject.id}" }`);
+
+				expect(response.status).toBe(404);
+				expect(response.body.message).toMatch(/project/i);
 			});
 		});
 	});
@@ -1366,7 +1385,7 @@ describe('PATCH /users/:id/role', () => {
 	let memberAgent: SuperAgentTest;
 	let authlessAgent: SuperAgentTest;
 
-	const { NO_ADMIN_ON_OWNER, NO_USER, NO_OWNER_ON_OWNER } =
+	const { NO_ADMIN_ON_OWNER, NO_USER, CANNOT_CHANGE_OWN_ROLE } =
 		UsersController.ERROR_MESSAGES.CHANGE_ROLE;
 
 	beforeAll(async () => {
@@ -1575,7 +1594,7 @@ describe('PATCH /users/:id/role', () => {
 			});
 
 			expect(response.statusCode).toBe(403);
-			expect(response.body.message).toBe(NO_OWNER_ON_OWNER);
+			expect(response.body.message).toBe(CANNOT_CHANGE_OWN_ROLE);
 		});
 
 		test('should fail to demote self to member', async () => {
@@ -1584,7 +1603,7 @@ describe('PATCH /users/:id/role', () => {
 			});
 
 			expect(response.statusCode).toBe(403);
-			expect(response.body.message).toBe(NO_OWNER_ON_OWNER);
+			expect(response.body.message).toBe(CANNOT_CHANGE_OWN_ROLE);
 		});
 
 		test('should fail to promote member to admin if not licensed', async () => {
@@ -1700,6 +1719,7 @@ describe('PATCH /users/:id/role', () => {
 	});
 
 	test('should change to existing custom role', async () => {
+		testServer.license.enable('feat:customRoles');
 		const customRole = 'custom:role';
 		await createRole({ slug: customRole, displayName: 'Custom Role 1', roleType: 'global' });
 		const response = await ownerAgent.patch(`/users/${member.id}/role`).send({
@@ -1725,10 +1745,10 @@ describe('PATCH /users/:id/role', () => {
 			savedConfig = { ...provisioningService.provisioningConfig };
 		});
 
-		afterEach(() => {
+		afterEach(async () => {
 			// @ts-expect-error - provisioningConfig is private
 			provisioningService.provisioningConfig = { ...savedConfig };
-			delete process.env.N8N_ENV_FEAT_ROLE_MAPPING_STRATEGY;
+			await Container.get(RoleMappingRuleRepository).delete({});
 		});
 
 		test('should return 403 when SSO provider controls instance roles', async () => {
@@ -1742,9 +1762,22 @@ describe('PATCH /users/:id/role', () => {
 		});
 
 		test('should return 403 when expression-based role mapping is active', async () => {
-			process.env.N8N_ENV_FEAT_ROLE_MAPPING_STRATEGY = 'true';
 			// @ts-expect-error - provisioningConfig is private
 			provisioningService.provisioningConfig.scopesUseExpressionMapping = true;
+
+			// Expression mapping only manages instance roles when instance-type rules exist.
+			const adminRole = await Container.get(RoleRepository).findOneOrFail({
+				where: { slug: 'global:admin' },
+			});
+			const ruleRepository = Container.get(RoleMappingRuleRepository);
+			await ruleRepository.save(
+				ruleRepository.create({
+					expression: '{{ true }}',
+					role: adminRole,
+					type: 'instance',
+					order: 0,
+				}),
+			);
 
 			await ownerAgent
 				.patch(`/users/${member.id}/role`)

@@ -82,12 +82,12 @@ const hasValidAnswer = computed(() => {
 });
 
 const showSkipButton = computed(() => {
-	if (isLastQuestion.value) return false;
 	if (currentQuestion.value?.type === 'single' && hasCustomText.value) return false;
 	return true;
 });
 
 const showNextButton = computed(() => {
+	if (isLastQuestion.value) return true;
 	if (currentQuestion.value?.type === 'single') return hasCustomText.value;
 	return true;
 });
@@ -95,12 +95,13 @@ const showNextButton = computed(() => {
 const isNextEnabled = computed(() => {
 	const q = currentQuestion.value;
 	if (!q) return false;
-	if (q.type === 'single') return hasCustomText.value;
+	// Blank text is a valid submission — it advances marked as skipped
+	if (q.type === 'text') return true;
+	if (q.type === 'single') return hasValidAnswer.value;
 	if (q.type === 'multi') {
 		const answer = currentAnswer.value;
 		return (answer?.selectedOptions.length ?? 0) > 0 || hasCustomText.value;
 	}
-	if (q.type === 'text') return hasCustomText.value;
 	return false;
 });
 
@@ -326,7 +327,7 @@ function handleEnterKey(event: KeyboardEvent, type: string, optionCount: number)
 		} else if (isNextEnabled.value) {
 			goToNextInternal();
 		}
-	} else if (type === 'text' && hasCustomText.value) {
+	} else if (type === 'text' && isNextEnabled.value) {
 		goToNextInternal();
 	}
 	return true;
@@ -388,10 +389,6 @@ function onOptionMouseEnter(idx: number) {
 			tabindex="0"
 			@keydown="onKeydown"
 		>
-			<p v-if="introMessage" :class="$style.intro">
-				{{ introMessage }}
-			</p>
-
 			<Transition :name="$style.questionFade" mode="out-in">
 				<div :key="currentQuestion.id" :class="$style.question">
 					<N8nText tag="p" :bold="true" :class="$style.questionText">
@@ -514,7 +511,7 @@ function onOptionMouseEnter(idx: number) {
 				<div :class="$style.pagination">
 					<N8nButton
 						variant="ghost"
-						size="xsmall"
+						size="medium"
 						icon-only
 						:disabled="isFirstQuestion"
 						data-test-id="instance-ai-questions-back"
@@ -530,7 +527,7 @@ function onOptionMouseEnter(idx: number) {
 					</N8nText>
 					<N8nButton
 						variant="ghost"
-						size="xsmall"
+						size="medium"
 						icon-only
 						:disabled="isLastQuestion"
 						data-test-id="instance-ai-questions-forward"
@@ -545,7 +542,7 @@ function onOptionMouseEnter(idx: number) {
 					<N8nButton
 						v-if="showSkipButton"
 						variant="outline"
-						size="small"
+						size="medium"
 						:disabled="disabled"
 						data-test-id="instance-ai-questions-skip"
 						@click="skipQuestion"
@@ -556,7 +553,7 @@ function onOptionMouseEnter(idx: number) {
 					<N8nButton
 						v-if="showNextButton"
 						:variant="isNextEnabled ? 'solid' : 'outline'"
-						size="small"
+						size="medium"
 						:disabled="disabled || isSubmitted || !isNextEnabled"
 						data-test-id="instance-ai-questions-next"
 						@click="goToNext"
@@ -570,6 +567,8 @@ function onOptionMouseEnter(idx: number) {
 </template>
 
 <style lang="scss" module>
+@use '../../shared/styles/question-option-rows' as questionOptions;
+
 .wrapper {
 	display: flex;
 	flex-direction: column;
@@ -586,8 +585,9 @@ function onOptionMouseEnter(idx: number) {
 
 .container {
 	outline: none;
-	border: var(--border);
+	border: 2px solid var(--color--primary);
 	border-radius: var(--radius--lg);
+	background-color: var(--color--background--light-3);
 }
 
 .question {
@@ -605,64 +605,17 @@ function onOptionMouseEnter(idx: number) {
 }
 
 .optionRow {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing--2xs);
-	width: 100%;
-	padding: var(--spacing--3xs) var(--spacing--2xs);
-	border: none;
-	border-radius: var(--radius--lg);
-	background: none;
-	cursor: pointer;
-	transition: background-color 0.15s ease;
-	text-align: left;
-
-	&:hover,
-	&.highlighted {
-		background-color: light-dark(var(--color--neutral-200), var(--color--neutral-800));
-	}
+	@include questionOptions.option-button-row;
+	@include questionOptions.active-selected;
 
 	&:hover .arrowIndicator,
 	&.highlighted .arrowIndicator {
 		opacity: 1;
 	}
-
-	&.activeSelected {
-		background-color: var(--color--primary);
-
-		.numberBadge {
-			background-color: var(--color--orange-400);
-			color: white;
-		}
-
-		.optionLabel {
-			color: white;
-		}
-
-		.arrowIndicator {
-			opacity: 1;
-			color: white;
-		}
-	}
-
-	&:disabled {
-		color: var(--color--text--tint-1);
-		cursor: not-allowed;
-	}
 }
 
 .numberBadge {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: var(--spacing--lg);
-	height: var(--spacing--lg);
-	border-radius: var(--radius);
-	background-color: var(--color--foreground--tint-1);
-	color: var(--color--text);
-	font-size: var(--font-size--2xs);
-	font-weight: var(--font-weight--bold);
-	flex-shrink: 0;
+	@include questionOptions.number-badge;
 }
 
 .arrowIndicator {
@@ -674,25 +627,11 @@ function onOptionMouseEnter(idx: number) {
 }
 
 .optionLabel {
-	color: var(--color--text);
-	font-size: var(--font-size--sm);
-	font-weight: var(--font-weight--regular);
-	line-height: var(--line-height--xl);
+	@include questionOptions.option-label;
 }
 
 .checkboxRow {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing--2xs);
-	cursor: pointer;
-	padding: var(--spacing--3xs) var(--spacing--2xs);
-	border-radius: var(--radius--lg);
-	transition: background-color 0.15s ease;
-
-	&:hover,
-	&.highlighted {
-		background-color: light-dark(var(--color--neutral-200), var(--color--neutral-800));
-	}
+	@include questionOptions.checkbox-row;
 }
 
 .somethingElseRow {
@@ -707,7 +646,7 @@ function onOptionMouseEnter(idx: number) {
 
 	&:hover,
 	&.highlighted {
-		background-color: light-dark(var(--color--neutral-200), var(--color--neutral-800));
+		background-color: light-dark(var(--color--neutral-100), var(--color--neutral-800));
 	}
 
 	.somethingElseInput {
@@ -739,7 +678,7 @@ function onOptionMouseEnter(idx: number) {
 
 	&:hover,
 	&.highlighted {
-		background-color: light-dark(var(--color--neutral-200), var(--color--neutral-800));
+		background-color: light-dark(var(--color--neutral-100), var(--color--neutral-800));
 	}
 }
 

@@ -6,14 +6,15 @@ import {
 } from '@n8n/api-types';
 import { Logger } from '@n8n/backend-common';
 import { GlobalConfig } from '@n8n/config';
-import type { User, PublicUser } from '@n8n/db';
-import { UserRepository, AuthenticatedRequest } from '@n8n/db';
+import type { PublicUser, User } from '@n8n/db';
+import { AuthenticatedRequest, UserRepository } from '@n8n/db';
 import { Body, createUserKeyedRateLimiter, Patch, Post, RestController } from '@n8n/decorators';
 import { plainToInstance } from 'class-transformer';
 import { Response } from 'express';
 
 import { AuthService } from '@/auth/auth.service';
 import { BadRequestError } from '@/errors/response-errors/bad-request.error';
+import { ForbiddenError } from '@/errors/response-errors/forbidden.error';
 import { InvalidMfaCodeError } from '@/errors/response-errors/invalid-mfa-code.error';
 import { EventService } from '@/events/event.service';
 import { ExternalHooks } from '@/external-hooks';
@@ -38,7 +39,7 @@ export class MeController {
 		private readonly eventService: EventService,
 		private readonly mfaService: MfaService,
 		private readonly globalConfig: GlobalConfig,
-	) {}
+	) { }
 
 	/**
 	 * Update the logged-in user's properties, except password.
@@ -49,7 +50,18 @@ export class MeController {
 		res: Response,
 		@Body payload: UserUpdateRequestDto,
 	): Promise<PublicUser> {
-		const { id: userId, email: currentEmail } = req.user;
+		const {
+			id: userId,
+			email: currentEmail,
+			firstName: currentFirstName,
+			lastName: currentLastName,
+		} = req.user;
+
+		if (this.isUserManagedByEnv(req.user)) {
+			throw new ForbiddenError(
+				'This account is managed via environment variables and cannot be modified through the API',
+			);
+		}
 
 		const { currentPassword, ...payloadWithoutPassword } = payload;
 
@@ -84,6 +96,15 @@ export class MeController {
 		return publicUser;
 	}
 
+	private isUserManagedByEnv(user: User): boolean {
+		const { instanceSettingsLoader } = this.globalConfig;
+		return (
+			instanceSettingsLoader.ownerManagedByEnv &&
+			!!user.email &&
+			user.email.toLowerCase() === instanceSettingsLoader.ownerEmail.toLowerCase()
+		);
+	}
+
 	/**
 	 * Update the logged-in user's password.
 	 */
@@ -97,6 +118,12 @@ export class MeController {
 	) {
 		const { user } = req;
 		const { currentPassword, newPassword, mfaCode } = payload;
+
+		if (this.isUserManagedByEnv(user)) {
+			throw new ForbiddenError(
+				'This account is managed via environment variables and cannot be modified through the API',
+			);
+		}
 
 		// If SAML is enabled, we don't allow the user to change their password
 		if (isSamlLicensedAndEnabled()) {

@@ -3,7 +3,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useNodeTypesStore } from '@/app/stores/nodeTypes.store';
 import { useProjectsStore } from '@/features/collaboration/projects/projects.store';
 import { VIEWS } from '@/app/constants';
-import { type CommandBarItem } from '@n8n/design-system/components/N8nCommandBar/types';
+import { type CommandBarItem } from '@n8n/design-system';
 import { useNodeCommands } from './useNodeCommands';
 import { useWorkflowCommands } from './useWorkflowCommands';
 import { useWorkflowNavigationCommands } from './useWorkflowNavigationCommands';
@@ -20,7 +20,7 @@ import type { CommandGroup } from '../types';
 import { useI18n } from '@n8n/i18n';
 import { PROJECT_DATA_TABLES, DATA_TABLE_VIEW } from '@/features/core/dataTable/constants';
 import { injectWorkflowDocumentStore } from '@/app/stores/workflowDocument.store';
-import { useTelemetry } from '@/app/composables/useTelemetry';
+import { useTelemetry } from '@n8n/composables/useTelemetry';
 import {
 	CHAT_CONVERSATION_VIEW,
 	CHAT_PERSONAL_AGENTS_VIEW,
@@ -99,66 +99,66 @@ export function useCommandBar() {
 	const executionViewGroups: CommandGroup[] = [
 		recentResourcesGroup,
 		executionCommandGroup,
+		instanceAiCommandGroup,
 		workflowNavigationGroup,
 		projectNavigationGroup,
 		credentialNavigationGroup,
 		dataTableNavigationGroup,
 		executionNavigationGroup,
-		instanceAiCommandGroup,
 		genericCommandGroup,
 	];
 
 	const workflowsListViewGroups: CommandGroup[] = [
 		recentResourcesGroup,
+		instanceAiCommandGroup,
 		workflowNavigationGroup,
 		projectNavigationGroup,
 		credentialNavigationGroup,
 		dataTableNavigationGroup,
 		executionNavigationGroup,
-		instanceAiCommandGroup,
 		genericCommandGroup,
 	];
 
 	const credentialsListViewGroups: CommandGroup[] = [
 		recentResourcesGroup,
+		instanceAiCommandGroup,
 		credentialNavigationGroup,
 		projectNavigationGroup,
 		workflowNavigationGroup,
 		dataTableNavigationGroup,
 		executionNavigationGroup,
-		instanceAiCommandGroup,
 		genericCommandGroup,
 	];
 
 	const executionsListViewGroups: CommandGroup[] = [
 		recentResourcesGroup,
+		instanceAiCommandGroup,
 		workflowNavigationGroup,
 		projectNavigationGroup,
 		credentialNavigationGroup,
 		dataTableNavigationGroup,
-		instanceAiCommandGroup,
 		genericCommandGroup,
 	];
 
 	const dataStoresListViewGroups: CommandGroup[] = [
 		recentResourcesGroup,
+		instanceAiCommandGroup,
 		dataTableNavigationGroup,
 		projectNavigationGroup,
 		workflowNavigationGroup,
 		credentialNavigationGroup,
 		executionNavigationGroup,
-		instanceAiCommandGroup,
 		genericCommandGroup,
 	];
 
 	const evaluationViewGroups: CommandGroup[] = [
 		recentResourcesGroup,
+		instanceAiCommandGroup,
 		workflowNavigationGroup,
 		projectNavigationGroup,
 		credentialNavigationGroup,
 		dataTableNavigationGroup,
 		executionNavigationGroup,
-		instanceAiCommandGroup,
 		genericCommandGroup,
 	];
 
@@ -176,12 +176,12 @@ export function useCommandBar() {
 
 	const fallbackViewCommands: CommandGroup[] = [
 		recentResourcesGroup,
+		instanceAiCommandGroup,
 		projectNavigationGroup,
 		workflowNavigationGroup,
 		credentialNavigationGroup,
 		dataTableNavigationGroup,
 		executionNavigationGroup,
-		instanceAiCommandGroup,
 		genericCommandGroup,
 	];
 

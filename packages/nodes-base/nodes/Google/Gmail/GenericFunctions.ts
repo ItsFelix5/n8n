@@ -401,7 +401,7 @@ export function prepareEmailsInput(
 	itemIndex: number,
 ) {
 	let emails = '';
-
+	input = String(input ?? '');
 	input.split(',').forEach((entry) => {
 		const email = entry.trim();
 
@@ -429,7 +429,28 @@ export function prepareEmailBody(
 	_instanceId?: string,
 ) {
 	const emailType = this.getNodeParameter('emailType', itemIndex) as string;
+<<<<<<< HEAD
 	const message = (this.getNodeParameter('message', itemIndex, '') as string).trim();
+=======
+	let message = String(this.getNodeParameter('message', itemIndex, '') ?? '').trim();
+
+	if (appendAttribution) {
+		const attributionText = 'This email was sent automatically with ';
+		const link = createUtmCampaignLink('n8n-nodes-base.gmail', instanceId);
+		if (emailType === 'html') {
+			message = `
+			${message}
+			<br>
+			<br>
+			---
+			<br>
+			<em>${attributionText}<a href="${link}" target="_blank">n8n</a></em>
+			`;
+		} else {
+			message = `${message}\n\n---\n${attributionText}n8n\n${'https://n8n.io'}`;
+		}
+	}
+>>>>>>> upstream/master
 
 	const body = {
 		body: '',
@@ -455,7 +476,7 @@ export async function prepareEmailAttachments(
 
 	if (attachments && !isEmpty(attachments)) {
 		for (const { property } of attachments) {
-			for (const name of (property as string).split(',')) {
+			for (const name of String(property ?? '').split(',')) {
 				const binaryData = this.helpers.assertBinaryData(itemIndex, name);
 				const binaryDataBuffer = await this.helpers.getBinaryDataBuffer(itemIndex, name);
 

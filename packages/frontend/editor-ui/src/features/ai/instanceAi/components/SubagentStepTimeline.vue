@@ -1,29 +1,46 @@
 <script lang="ts" setup>
-import type { InstanceAiAgentNode, InstanceAiToolCallState } from '@n8n/api-types';
-import { N8nButton, N8nIcon, type IconName } from '@n8n/design-system';
+import {
+	N8nButton,
+	N8nIcon,
+	type IconName,
+	N8nAnimatedCollapsibleContent as AnimatedCollapsibleContent,
+	N8nAiActivityStep as ToolCallStep,
+	N8nAiActivityStepResultSection,
+} from '@n8n/design-system';
+import type {
+	InstanceAiAgentNode,
+	InstanceAiTimelineEntry,
+	InstanceAiToolCallState,
+} from '@n8n/api-types';
 import { useI18n } from '@n8n/i18n';
-import { CollapsibleContent, CollapsibleRoot, CollapsibleTrigger } from 'reka-ui';
+import { CollapsibleRoot, CollapsibleTrigger } from 'reka-ui';
 import { computed } from 'vue';
+import { HIDDEN_TOOLS, isStreamingTimelineEntry } from '../agentTimeline.utils';
 import { getToolIcon, useToolLabel } from '../toolLabels';
+import AiReasoningBlock from '../../shared/components/AiReasoningBlock.vue';
 import ButtonLike from './ButtonLike.vue';
-import DataSection from './DataSection.vue';
 import InstanceAiMarkdown from './InstanceAiMarkdown.vue';
-import ToolCallStep from './ToolCallStep.vue';
+import ToolResultJson from './ToolResultJson.vue';
+import ToolResultRenderer from './ToolResultRenderer.vue';
 
-const props = defineProps<{
-	agentNode: InstanceAiAgentNode;
-}>();
+const props = withDefaults(
+	defineProps<{
+		agentNode: InstanceAiAgentNode;
+		/** When provided, renders only these entries instead of the full timeline. */
+		visibleEntries?: InstanceAiTimelineEntry[];
+		/** Peek mode: compact, pins streaming text to the bottom. */
+		peek?: boolean;
+	}>(),
+	{ visibleEntries: undefined, peek: false },
+);
 
 const i18n = useI18n();
 const { getToolLabel, getToggleLabel, getHideLabel } = useToolLabel();
 
 const CODE_BLOCK_PATTERN = /```/;
 
-/** Tool calls that are internal and should not be shown in the step timeline. */
-const HIDDEN_TOOLS = new Set(['updateWorkingMemory']);
-
 interface TimelineStep {
-	type: 'tool-call' | 'text' | 'done';
+	type: 'tool-call' | 'text' | 'reasoning';
 	icon: IconName;
 	label: string;
 	isLoading: boolean;
@@ -33,6 +50,7 @@ interface TimelineStep {
 	textContent?: string;
 	isLongText?: boolean;
 	shortLabel?: string;
+	entry?: Extract<InstanceAiTimelineEntry, { type: 'reasoning' }>;
 }
 
 function extractShortLabel(content: string): string {
@@ -59,10 +77,12 @@ const toolCallsById = computed(() => {
 	return map;
 });
 
+const timelineEntries = computed(() => props.visibleEntries ?? props.agentNode.timeline);
+
 const steps = computed((): TimelineStep[] => {
 	const result: TimelineStep[] = [];
 
-	for (const entry of props.agentNode.timeline) {
+	for (const entry of timelineEntries.value) {
 		if (entry.type === 'text') {
 			const longText = isLongTextContent(entry.content);
 			result.push({
@@ -80,23 +100,22 @@ const steps = computed((): TimelineStep[] => {
 			result.push({
 				type: 'tool-call',
 				icon: tc.isLoading ? 'spinner' : getToolIcon(tc.toolName),
-				label: getToolLabel(tc.toolName),
+				label: getToolLabel(tc.toolName, tc.args),
 				isLoading: tc.isLoading,
 				toggleLabel: getToggleLabel(tc),
 				hideLabel: getHideLabel(tc),
 				toolCall: tc,
 			});
+		} else if (entry.type === 'reasoning') {
+			result.push({
+				type: 'reasoning',
+				icon: 'brain',
+				label: '',
+				isLoading: false,
+				entry,
+			});
 		}
-		// Skip 'child' entries — parent AgentTimeline handles child cards
-	}
-
-	if (props.agentNode.status === 'completed') {
-		result.push({
-			type: 'done',
-			icon: 'circle-check',
-			label: i18n.baseText('instanceAi.stepTimeline.done'),
-			isLoading: false,
-		});
+		// Skip 'child' entries (parent AgentTimeline handles child cards)
 	}
 
 	return result;
@@ -109,15 +128,23 @@ const steps = computed((): TimelineStep[] => {
 			<!-- Tool call: rendered via ToolCallStep (has its own icon column) -->
 			<ToolCallStep
 				v-if="step.type === 'tool-call' && step.toolCall"
-				:tool-call="step.toolCall"
 				:label="step.label"
-				:show-connector="idx < steps.length - 1"
-			/>
+				:loading="step.toolCall.isLoading"
+				:error="step.toolCall.error"
+			>
+				<ToolResultJson v-if="step.toolCall.args" :value="step.toolCall.args" />
+				<ToolResultRenderer
+					v-if="step.toolCall.result !== undefined"
+					:result="step.toolCall.result"
+					:tool-name="step.toolCall.toolName"
+					:tool-args="step.toolCall.args"
+				/>
+			</ToolCallStep>
 
 			<template v-else-if="step.type === 'text'">
 				<CollapsibleRoot v-if="step.isLongText" v-slot="{ open }">
 					<CollapsibleTrigger as-child>
-						<N8nButton ref="triggerRef" variant="ghost" size="small">
+						<N8nButton ref="triggerRef" variant="ghost" size="small" :class="$style.toggleTrigger">
 							<template #icon>
 								<template v-if="step.isLoading">
 									<N8nIcon icon="spinner" size="small" color="primary" spin />
@@ -130,22 +157,27 @@ const steps = computed((): TimelineStep[] => {
 							<template v-else>{{ step.label }}</template>
 						</N8nButton>
 					</CollapsibleTrigger>
-					<CollapsibleContent :class="$style.toggleContent">
-						<DataSection>
+					<AnimatedCollapsibleContent :class="$style.toggleContent">
+						<N8nAiActivityStepResultSection>
 							<InstanceAiMarkdown :content="step.textContent!" />
-						</DataSection>
-					</CollapsibleContent>
+						</N8nAiActivityStepResultSection>
+					</AnimatedCollapsibleContent>
 				</CollapsibleRoot>
 				<ButtonLike v-else>
-					<N8nIcon :icon="step.icon" size="small" />
-					{{ step.label }}
+					<!-- Peek mode only: column-reverse + overflow-y pins the scroll
+						 to the bottom so the latest streamed tokens stay visible. -->
+					<div v-if="props.peek" :class="$style.streamingMarkdown">
+						<InstanceAiMarkdown :content="step.label" />
+					</div>
+					<InstanceAiMarkdown v-else :content="step.label" />
 				</ButtonLike>
 			</template>
 
-			<ButtonLike v-else-if="step.type === 'done'">
-				<N8nIcon :icon="step.icon" size="small" />
-				{{ step.label }}
-			</ButtonLike>
+			<AiReasoningBlock
+				v-else-if="step.type === 'reasoning' && step.entry"
+				:entry="step.entry"
+				:streaming="isStreamingTimelineEntry(props.agentNode, step.entry)"
+			/>
 		</template>
 	</div>
 </template>
@@ -160,5 +192,23 @@ const steps = computed((): TimelineStep[] => {
 .toggleContent {
 	max-height: 300px;
 	overflow-y: auto;
+}
+
+.toggleTrigger {
+	--button--padding: 0;
+	--button--font-size: var(--font-size--sm);
+
+	padding-inline: 0;
+	font-size: var(--font-size--sm);
+}
+
+.streamingMarkdown {
+	display: flex;
+	flex-direction: column-reverse;
+	overflow-y: auto;
+	max-height: 120px;
+	flex: 1 1 auto;
+	min-width: 0;
+	scrollbar-width: none;
 }
 </style>
