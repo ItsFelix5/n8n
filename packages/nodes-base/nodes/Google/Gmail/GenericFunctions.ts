@@ -86,9 +86,8 @@ export async function googleApiRequest(
 				const resource = this.getNodeParameter('resource', 0) as string;
 				const errorOptions = {
 					message: `Invalid ${resource} ID`,
-					description: `${
-						resource.charAt(0).toUpperCase() + resource.slice(1)
-					} IDs should look something like this: 182b676d244938bd`,
+					description: `${resource.charAt(0).toUpperCase() + resource.slice(1)
+						} IDs should look something like this: 182b676d244938bd`,
 				};
 				throw new NodeApiError(this.getNode(), error as JsonObject, errorOptions);
 			}
@@ -429,28 +428,7 @@ export function prepareEmailBody(
 	_instanceId?: string,
 ) {
 	const emailType = this.getNodeParameter('emailType', itemIndex) as string;
-<<<<<<< HEAD
 	const message = (this.getNodeParameter('message', itemIndex, '') as string).trim();
-=======
-	let message = String(this.getNodeParameter('message', itemIndex, '') ?? '').trim();
-
-	if (appendAttribution) {
-		const attributionText = 'This email was sent automatically with ';
-		const link = createUtmCampaignLink('n8n-nodes-base.gmail', instanceId);
-		if (emailType === 'html') {
-			message = `
-			${message}
-			<br>
-			<br>
-			---
-			<br>
-			<em>${attributionText}<a href="${link}" target="_blank">n8n</a></em>
-			`;
-		} else {
-			message = `${message}\n\n---\n${attributionText}n8n\n${'https://n8n.io'}`;
-		}
-	}
->>>>>>> upstream/master
 
 	const body = {
 		body: '',

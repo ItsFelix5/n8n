@@ -21,14 +21,11 @@ import NodeCredentials from '@/features/credentials/components/NodeCredentials.v
 import NodeSettingsHeader from './NodeSettingsHeader.vue';
 import NodeWebhooks from './NodeWebhooks.vue';
 import ParameterInputList from '@/features/ndv/parameters/components/ParameterInputList.vue';
-<<<<<<< HEAD
 import CopyInput from '@/app/components/CopyInput.vue';
-=======
 import AgentNdvInlineControls from '@/features/ndv/agents/components/AgentNdvInlineControls.vue';
 import AgentNdvReferencedSummary from '@/features/ndv/agents/components/AgentNdvReferencedSummary.vue';
 import { NdvAgentConfigKey } from '@/features/ndv/agents/composables/useNdvAgentConfig';
 import { isAgentNodeV2 } from '@/features/agents/utils/agentNode';
->>>>>>> upstream/master
 import get from 'lodash/get';
 
 import ExperimentalEmbeddedNdvHeader from '@/features/workflows/canvas/experimental/components/ExperimentalEmbeddedNdvHeader.vue';
@@ -69,12 +66,9 @@ import { useQuickConnect } from '@/features/credentials/quickConnect/composables
 
 import { N8nBlockUi, N8nIcon, N8nNotice, N8nText } from '@n8n/design-system';
 import { useRoute } from 'vue-router';
-<<<<<<< HEAD
 import { useRootStore } from '@n8n/stores/useRootStore';
 import { useSettingsStore } from '@/app/stores/settings.store';
-=======
 import { useSettingsStore } from '@n8n/stores/settings.store';
->>>>>>> upstream/master
 import { injectWorkflowDocumentStore } from '@/app/stores/workflowDocument.store';
 import { ProjectTypes } from '@/features/collaboration/projects/projects.types';
 import { useEditorContext } from '@/app/composables/useEditorContext';

@@ -1,11 +1,7 @@
 import { SEND_AND_WAIT_OPERATION, type INodeProperties } from 'n8n-workflow';
 
-<<<<<<< HEAD
-=======
-import { appendAttributionOption } from '../../../../utils/descriptions';
 import { simplifyMemoryNotice } from '../utils/descriptions';
 
->>>>>>> upstream/master
 export const messageOperations: INodeProperties[] = [
 	{
 		displayName: 'Operation',

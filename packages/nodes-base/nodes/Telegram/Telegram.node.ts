@@ -1,21 +1,27 @@
 import { lookup } from 'mime-types';
 import type {
-	IExecuteFunctions,
 	IDataObject,
+	IExecuteFunctions,
+	IHttpRequestMethods,
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
-	IHttpRequestMethods,
 	JsonObject,
 } from 'n8n-workflow';
 import {
 	BINARY_ENCODING,
-	SEND_AND_WAIT_OPERATION,
 	NodeConnectionTypes,
 	NodeOperationError,
+	SEND_AND_WAIT_OPERATION,
 } from 'n8n-workflow';
 import type { Readable } from 'stream';
 
+import { configureWaitTillDate } from '../../utils/sendAndWait/configureWaitTillDate.util';
+import { sendAndWaitWebhooksDescription } from '../../utils/sendAndWait/descriptions';
+import {
+	getSendAndWaitProperties,
+	SEND_AND_WAIT_WAITING_TOOLTIP,
+} from '../../utils/sendAndWait/utils';
 import {
 	addAdditionalFields,
 	addReplyMarkup,
@@ -23,19 +29,9 @@ import {
 	createSendAndWaitMessageBody,
 	getPropertyName,
 } from './GenericFunctions';
-<<<<<<< HEAD
-=======
 import { telegramHitlProperties } from './hitl/descriptions';
 import { prepareChatApproval } from './hitl/setup';
 import { telegramSendAndWaitWebhook } from './hitl/webhook';
-import { appendAttributionOption } from '../../utils/descriptions';
->>>>>>> upstream/master
-import { configureWaitTillDate } from '../../utils/sendAndWait/configureWaitTillDate.util';
-import { sendAndWaitWebhooksDescription } from '../../utils/sendAndWait/descriptions';
-import {
-	getSendAndWaitProperties,
-	SEND_AND_WAIT_WAITING_TOOLTIP,
-} from '../../utils/sendAndWait/utils';
 
 export class Telegram implements INodeType {
 	description: INodeTypeDescription = {

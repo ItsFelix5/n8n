@@ -4,27 +4,21 @@ import { buildHitlCallbackReference, InstanceSettings } from 'n8n-core';
 import type {
 	IDataObject,
 	IExecuteFunctions,
+	IHttpRequestMethods,
 	ILoadOptionsFunctions,
 	IOAuth2Options,
-	IHttpRequestMethods,
 	IRequestOptions,
 	IWebhookFunctions,
 } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 
-<<<<<<< HEAD:packages/nodes-base/nodes/Slack/GenericFunctions.ts
-import type { SendAndWaitMessageBody } from './MessageInterface';
-import { getSendAndWaitConfig } from '../../utils/sendAndWait/utils';
-=======
 import { sleep } from '@n8n/utils/sleep';
+import { getSendAndWaitConfig } from '../../../utils/sendAndWait/utils';
 import {
 	HITL_APPROVE_ACTION_ID,
 	HITL_DECLINE_ACTION_ID,
 	type SendAndWaitMessageBody,
 } from './MessageInterface';
-import { getSendAndWaitConfig } from '../../../utils/sendAndWait/utils';
-import { createUtmCampaignLink } from '../../../utils/utilities';
->>>>>>> upstream/master:packages/nodes-base/nodes/Slack/V2/GenericFunctions.ts
 
 interface RateLimitOptions {
 	/**
@@ -80,8 +74,7 @@ export function throwOnSlackApiError(
 	if (responseData.error === 'paid_teams_only') {
 		throw new NodeOperationError(
 			this.getNode(),
-			`Your current Slack plan does not include the resource '${
-				this.getNodeParameter('resource', 0) as string
+			`Your current Slack plan does not include the resource '${this.getNodeParameter('resource', 0) as string
 			}'`,
 			{
 				description:
@@ -578,13 +571,13 @@ export function createSendAndWaitMessageBody(context: IExecuteFunctions) {
 					// the url so Slack treats it as interactive and POSTs the click to us instead.
 					...(captureResponder
 						? {
-								action_id: option.approved ? HITL_APPROVE_ACTION_ID : HITL_DECLINE_ACTION_ID,
-								value: buildHitlCallbackReference(
-									executionId,
-									option.approved ? 'a' : 'd',
-									hmacSecret,
-								),
-							}
+							action_id: option.approved ? HITL_APPROVE_ACTION_ID : HITL_DECLINE_ACTION_ID,
+							value: buildHitlCallbackReference(
+								executionId,
+								option.approved ? 'a' : 'd',
+								hmacSecret,
+							),
+						}
 						: { url: option.url }),
 				})),
 			},

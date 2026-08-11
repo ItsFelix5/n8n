@@ -1,8 +1,9 @@
 import { TEMPLATES_URLS } from '@/app/constants';
-import type { INodeUi } from '@/Interface';
-import { useCloudPlanStore } from '@n8n/stores/cloudPlan.store';
-import { getTemplatePathByRole } from '@/experiments/utils';
+import { useWorkflowsListStore } from '@/app/stores/workflowsList.store';
 import { getNodesWithNormalizedPosition } from '@/app/utils/nodeViewUtils';
+import { getTemplatePathByRole } from '@/experiments/utils';
+import { useInstanceAiAvailable } from '@/features/ai/instanceAi/composables/useInstanceAiAvailability';
+import type { INodeUi } from '@/Interface';
 import type {
 	ITemplatesCategory,
 	ITemplatesCollection,
@@ -14,13 +15,12 @@ import type {
 } from '@n8n/rest-api-client/api/templates';
 import * as templatesApi from '@n8n/rest-api-client/api/templates';
 import { STORES } from '@n8n/stores';
+import { useCloudPlanStore } from '@n8n/stores/cloudPlan.store';
+import { useSettingsStore } from '@n8n/stores/settings.store';
 import { useRootStore } from '@n8n/stores/useRootStore';
+import { useUsersStore } from '@n8n/stores/users.store';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import { useSettingsStore } from '@n8n/stores/settings.store';
-import { useInstanceAiAvailable } from '@/features/ai/instanceAi/composables/useInstanceAiAvailability';
-import { useUsersStore } from '@n8n/stores/users.store';
-import { useWorkflowsListStore } from '@/app/stores/workflowsList.store';
 
 export interface ITemplateState {
 	categories: ITemplatesCategory[];
@@ -171,7 +171,7 @@ export const useTemplatesStore = defineStore(STORES.TEMPLATES, () => {
 		() =>
 			cloudPlanStore.currentUserCloudInfo?.role ??
 			(userStore.currentUser?.personalizationAnswers &&
-			'role' in userStore.currentUser.personalizationAnswers
+				'role' in userStore.currentUser.personalizationAnswers
 				? userStore.currentUser.personalizationAnswers.role
 				: undefined),
 	);
@@ -189,25 +189,7 @@ export const useTemplatesStore = defineStore(STORES.TEMPLATES, () => {
 	});
 
 	const websiteTemplateRepositoryParameters = computed(() => {
-<<<<<<< HEAD
 		return new URLSearchParams({});
-=======
-		const defaultParameters: Record<string, string> = {
-			...TEMPLATES_URLS.UTM_QUERY,
-			utm_instance: currentN8nPath.value,
-			utm_n8n_version: rootStore.versionCli,
-			utm_awc: String(workflowsListStore.activeWorkflows.length),
-		};
-		if (userRole.value) {
-			defaultParameters.utm_user_role = userRole.value;
-		}
-		if (instanceFeatures.value.length > 0) {
-			defaultParameters.utm_instance_features = instanceFeatures.value.join(',');
-		}
-		return new URLSearchParams({
-			...defaultParameters,
-		});
->>>>>>> upstream/master
 	});
 
 	const websiteTemplateRepositoryURL = computed(

@@ -20,15 +20,22 @@ import {
 } from 'n8n-workflow';
 import type { Readable } from 'stream';
 
+import { configureWaitTillDate } from '../../utils/sendAndWait/configureWaitTillDate.util';
+import { sendAndWaitWebhooksDescription } from '../../utils/sendAndWait/descriptions';
+import {
+	getSendAndWaitProperties,
+	SEND_AND_WAIT_WAITING_TOOLTIP,
+	sendAndWaitWebhook,
+} from '../../utils/sendAndWait/utils';
 import { channelFields, channelOperations } from './ChannelDescription';
 import { fileFields, fileOperations } from './FileDescription';
 import {
-	slackApiRequest,
-	slackApiRequestAllItems,
+	createSendAndWaitMessageBody,
 	getMessageContent,
 	getTarget,
-	createSendAndWaitMessageBody,
 	processThreadOptions,
+	slackApiRequest,
+	slackApiRequestAllItems,
 	slackApiRequestAllItemsWithRateLimit,
 } from './GenericFunctions';
 import {
@@ -41,15 +48,7 @@ import {
 import { reactionFields, reactionOperations } from './ReactionDescription';
 import { userFields, userOperations } from './UserDescription';
 import { userGroupFields, userGroupOperations } from './UserGroupDescription';
-import { configureWaitTillDate } from '../../utils/sendAndWait/configureWaitTillDate.util';
-import { sendAndWaitWebhooksDescription } from '../../utils/sendAndWait/descriptions';
-import {
-	getSendAndWaitProperties,
-	SEND_AND_WAIT_WAITING_TOOLTIP,
-	sendAndWaitWebhook,
-} from '../../utils/sendAndWait/utils';
 
-<<<<<<< HEAD
 export class Slack implements INodeType {
 	description = {
 		displayName: 'Slack',
@@ -139,31 +138,6 @@ export class Slack implements INodeType {
 				],
 				default: 'message',
 			},
-=======
-export class Slack extends VersionedNodeType {
-	constructor() {
-		const baseDescription: INodeTypeBaseDescription = {
-			displayName: 'Slack',
-			name: 'slack',
-			icon: 'file:slack.svg',
-			group: ['output'],
-			subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-			description: 'Consume Slack API',
-			defaultVersion: 2.7,
-		};
-
-		const nodeVersions: IVersionedNodeType['nodeVersions'] = {
-			1: new SlackV1(baseDescription),
-			2: new SlackV2(baseDescription),
-			2.1: new SlackV2(baseDescription),
-			2.2: new SlackV2(baseDescription),
-			2.3: new SlackV2(baseDescription),
-			2.4: new SlackV2(baseDescription),
-			2.5: new SlackV2(baseDescription),
-			2.6: new SlackV2(baseDescription),
-			2.7: new SlackV2(baseDescription),
-		};
->>>>>>> upstream/master
 
 			...channelOperations,
 			...channelFields,
@@ -842,7 +816,7 @@ export class Slack extends VersionedNodeType {
 							select === 'user' &&
 							action === 'postEphemeral' &&
 							(this.getNodeParameter('user', i) as INodeParameterResourceLocator)?.mode ===
-								'username'
+							'username'
 						) {
 							throw new NodeOperationError(
 								this.getNode(),
@@ -880,11 +854,11 @@ export class Slack extends VersionedNodeType {
 						let target =
 							select === 'channel'
 								? (this.getNodeParameter('channelId', i, undefined, {
-										extractValue: true,
-									}) as string)
+									extractValue: true,
+								}) as string)
 								: (this.getNodeParameter('user', i, undefined, {
-										extractValue: true,
-									}) as string);
+									extractValue: true,
+								}) as string);
 
 						if (
 							select === 'user' &&
