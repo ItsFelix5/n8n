@@ -3,16 +3,16 @@
 import { Logger } from '@n8n/backend-common';
 import { EventEntity, EventRepository, WorkflowRepository } from '@n8n/db';
 import { Service } from '@n8n/di';
+import { ensureError } from '@n8n/utils/errors/ensure-error';
 import { createHmac, timingSafeEqual } from 'crypto';
 import type { Request, Response } from 'express';
 import { ErrorReporter, WebhookContext } from 'n8n-core';
 import {
-	Node,
+	INodeType,
 	IWebhookData,
 	IWebhookResponseData,
 	IWorkflowExecutionDataProcess,
-	ensureError,
-	INodeType,
+	Node,
 	Workflow,
 } from 'n8n-workflow';
 
