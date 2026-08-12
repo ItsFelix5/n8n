@@ -23,7 +23,6 @@ copyInstanceAiExamplesData();
 
 if (publicApiEnabled) {
 	createPublicApiDirectory();
-	bundleOpenApiSpecs();
 
 	await buildPublicApiSpec();
 }
