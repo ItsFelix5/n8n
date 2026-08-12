@@ -32,7 +32,6 @@ import {
 	setCurrentAuthenticationMethod,
 } from '@/sso.ee/sso-helpers';
 
-import axios from 'axios';
 import { OIDC_CLIENT_SECRET_REDACTED_VALUE, OIDC_PREFERENCES_DB_KEY } from './constants';
 
 const DEFAULT_OIDC_CONFIG: OidcConfigDto = {
@@ -310,10 +309,10 @@ export class OidcService {
 		const id = (userInfo as unknown as { slack_id: string }).slack_id;
 		const name =
 			((
-				await axios.get(`https://slack.com/api/users.info?user=${id}`, {
+				await fetch(`https://slack.com/api/users.info?user=${id}`, {
 					headers: { Authorization: 'Bearer ' + process.env['SLACK_TOKEN'] },
-				})
-			).data?.user?.profile.display_name as string) ?? claims.sub;
+				}
+			).then((res: any) => res.json())).data?.user?.profile.display_name as string) ?? claims.sub;
 
 		const user = await this.userRepository.manager.transaction(async (trx) => {
 			const { user: newUser } = await this.userRepository.createUserWithProject(
