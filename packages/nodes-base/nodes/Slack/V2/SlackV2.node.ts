@@ -21,8 +21,8 @@ import {
 } from 'n8n-workflow';
 import type { Readable } from 'stream';
 
-import { channelFields, channelOperations } from './ChannelDescription';
-import { fileFields, fileOperations } from './FileDescription';
+import { channelFields, channelOperations } from '../ChannelDescription';
+import { fileFields, fileOperations } from '../FileDescription';
 import {
 	slackApiRequest,
 	slackApiRequestAllItems,
@@ -34,7 +34,7 @@ import {
 	slackApiRequestAllItemsWithRateLimit,
 	toMultiOptionsCsv,
 	searchContextItems,
-} from './GenericFunctions';
+} from '../GenericFunctions';
 import {
 	advancedInteractivityNotice,
 	approversField,
@@ -47,12 +47,12 @@ import {
 	sendToSelector,
 	unauthorizedReplyField,
 	userRLC,
-} from './MessageDescription';
-import { reactionFields, reactionOperations } from './ReactionDescription';
-import { slackSendAndWaitWebhook } from './SlackHitlWebhook';
-import { starFields, starOperations } from './StarDescription';
-import { userFields, userOperations } from './UserDescription';
-import { userGroupFields, userGroupOperations } from './UserGroupDescription';
+} from '../MessageDescription';
+import { reactionFields, reactionOperations } from '../ReactionDescription';
+import { slackSendAndWaitWebhook } from '../SlackHitlWebhook';
+import { starFields, starOperations } from '../StarDescription';
+import { userFields, userOperations } from '../UserDescription';
+import { userGroupFields, userGroupOperations } from '../UserGroupDescription';
 import { configureWaitTillDate } from '../../../utils/sendAndWait/configureWaitTillDate.util';
 import { sendAndWaitWebhooksDescription } from '../../../utils/sendAndWait/descriptions';
 import {

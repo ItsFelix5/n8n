@@ -13,7 +13,7 @@ import type {
 import { NodeOperationError } from 'n8n-workflow';
 
 import { sleep } from '@n8n/utils/sleep';
-import { getSendAndWaitConfig } from '../../../utils/sendAndWait/utils';
+import { getSendAndWaitConfig } from '../../utils/sendAndWait/utils';
 import {
 	HITL_APPROVE_ACTION_ID,
 	HITL_DECLINE_ACTION_ID,

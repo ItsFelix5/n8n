@@ -3,9 +3,9 @@ import { jsonParse, type IDataObject, type IWebhookFunctions } from 'n8n-workflo
 
 import { slackApiRequest } from './GenericFunctions';
 import { HITL_APPROVE_ACTION_ID, type SectionBlock } from './MessageInterface';
-import type { SendAndWaitResponder } from '../../../utils/sendAndWait/interfaces';
-import { sendAndWaitWebhook } from '../../../utils/sendAndWait/utils';
-import { verifySignature } from '../SlackTriggerHelpers';
+import type { SendAndWaitResponder } from '../../utils/sendAndWait/interfaces';
+import { sendAndWaitWebhook } from '../../utils/sendAndWait/utils';
+import { verifySignature } from './SlackTriggerHelpers';
 
 interface SlackInteractionPayload {
 	user?: { id?: string; name?: string; username?: string };

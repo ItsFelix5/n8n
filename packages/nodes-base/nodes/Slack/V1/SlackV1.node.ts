@@ -14,21 +14,21 @@ import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
 import { oldVersionNotice } from '@utils/descriptions';
 
-import { channelFields, channelOperations } from './ChannelDescription';
-import { fileFields, fileOperations } from './FileDescription';
+import { channelFields, channelOperations } from '../ChannelDescription';
+import { fileFields, fileOperations } from '../FileDescription';
 import {
 	slackApiRequest,
 	slackApiRequestAllItems,
 	toMultiOptionsCsv,
 	validateJSON,
-} from './GenericFunctions';
-import { messageFields, messageOperations } from './MessageDescription';
+} from '../GenericFunctions';
+import { messageFields, messageOperations } from '../MessageDescription';
 import type { IAttachment } from './MessageInterface';
-import { reactionFields, reactionOperations } from './ReactionDescription';
-import { starFields, starOperations } from './StarDescription';
-import { userFields, userOperations } from './UserDescription';
-import { userGroupFields, userGroupOperations } from './UserGroupDescription';
-import { userProfileFields, userProfileOperations } from './UserProfileDescription';
+import { reactionFields, reactionOperations } from '../ReactionDescription';
+import { starFields, starOperations } from '../StarDescription';
+import { userFields, userOperations } from '../UserDescription';
+import { userGroupFields, userGroupOperations } from '../UserGroupDescription';
+import { userProfileFields, userProfileOperations } from '../UserProfileDescription';
 
 interface Attachment {
 	fields: {
